@@ -1,6 +1,6 @@
 import { NextApiResponse, NextApiRequest } from 'next';
 import { prisma } from '@/utils/db/prisma';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 import * as z from 'zod';
 
 const credentials = z.object({
@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     if (user && user.password) {
-      if (await argon2.verify(user.password, password)) {
+      if (await bcrypt.compare(password, user.password)) {
         if (user.name && user.username) {
           return res.status(200).json({
             name: user.name,
