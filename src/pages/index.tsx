@@ -4,7 +4,7 @@ import { ReactElement } from 'react';
 import Layout from '@/lib/components/Layouts/Layout';
 import { useSession, signOut } from 'next-auth/react';
 import ProductCards from '@/lib/components/Products/ProductCards';
-import Carousel from '@/lib/components/Core/Carousel';
+import BannerCarousel from '@/lib/components/Home/BannerCarousel';
 
 const Home: PageWithLayout = () => {
   const { data: session, status } = useSession();
@@ -16,14 +16,10 @@ const Home: PageWithLayout = () => {
         <meta name="description" content="An ecommerce store" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
-      
-      <div className="mb-8">
-        <Carousel />
-      </div>
-      
-      <div className="p-6">
-        <ProductCards />
-      </div>
+      {/* Home Banners */}
+      <BannerCarousel />
+
+      <ProductCards />
     </div>
   );
 };

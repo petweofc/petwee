@@ -60,7 +60,7 @@ function ProductCards({
         </div>
       )}
 
-      <div className="flex flex-wrap justify-center gap-10">
+      <div className="w-full flex flex-wrap justify-start gap-6">
         {isLoading && Array.from(Array(8).keys()).map((e, i) => <ProductCardSkeleton key={i} />)}
 
         {data &&
