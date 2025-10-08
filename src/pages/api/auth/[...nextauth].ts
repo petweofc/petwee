@@ -37,11 +37,32 @@ export const authOptions: NextAuthOptions = {
       name: 'Credentials',
       credentials: {},
       async authorize(credentials, req) {
-        const { name, username, password, type } = credentials as {
-          name?: string;
+        const {
+          accountType,
+          fullName,
+          email,
+          mobilePhone,
+          phone,
+          gender,
+          birthDate,
+          cpf,
+          username,
+          password,
+          type,
+          termsConsent
+        } = credentials as unknown as {
+          accountType?: 'INDIVIDUAL' | 'COMPANY';
+          fullName?: string;
+          email?: string;
+          mobilePhone?: string;
+          phone?: string;
+          gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'UNDISCLOSED';
+          birthDate?: string;
+          cpf?: string;
           username: string;
           password: string;
           type?: string;
+          termsConsent?: boolean;
         };
 
         if (type === 'login') {
@@ -63,18 +84,29 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (type === 'signup') {
+          console.log('NextAuth signup credentials:', credentials);
           const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
           const res = await fetch(signupEndpoint, {
             method: 'POST',
             body: JSON.stringify({
-              name,
+              accountType,
+              fullName,
+              email,
+              mobilePhone,
+              phone,
+              gender,
+              birthDate,
+              cpf,
               username,
-              password
+              password,
+              termsConsent
             }),
             headers: { 'Content-Type': 'application/json' }
           });
 
+          console.log('Signup API response status:', res.status);
           const user: UserResponse = await res.json();
+          console.log('Signup API response:', user);
 
           if (res.ok && user) {
             return user;
