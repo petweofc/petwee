@@ -8,6 +8,7 @@ import { trpc } from '@/utils/trpc';
 import { ProductWithId } from '@/server/schema';
 import ProductCardSkeleton from '@/lib/components/Products/ProductCardSkeleton';
 import NextError from 'next/error';
+import { cloudinaryUrl } from '@/utils/client/cloudinaryUrl';
 
 function MyProducts() {
   const { data, isLoading, error } = trpc.product.list.useQuery();
@@ -54,7 +55,7 @@ function MyProducts() {
                 title={e.title}
                 description={e.description}
                 price={(+e.priceInCents / 100).toString()}
-                image={`https://res.cloudinary.com/dv9wpbflv/image/upload/v${e.image}.jpg`}
+                image={cloudinaryUrl(e.image, { useVersion: false })}
                 category={e.category[0].id.toString()}
                 openEditModal={() => setOpenProductModal(true)}
                 setEditableProduct={setEditableProduct}

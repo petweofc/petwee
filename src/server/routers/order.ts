@@ -5,6 +5,7 @@ import { getSelectedOrderItems, getCartItemsPrice } from '@/server/functions/car
 import { z } from 'zod';
 import { stripe } from '@/utils/stripe';
 import { statusUpdateInputWithId } from '../schema';
+import { cloudinaryUrl } from '@/utils/client/cloudinaryUrl';
 
 export const orderRouter = router({
   placeOrder: protectedProcedure
@@ -30,9 +31,7 @@ export const orderRouter = router({
               currency: 'usd',
               product_data: {
                 name: item.title,
-                images: [
-                  `https://res.cloudinary.com/dv9wpbflv/image/upload/w_300,f_auto,q_auto/v${item.image}.jpg`
-                ]
+                images: [cloudinaryUrl(item.image, { transformations: 'w_300,f_auto,q_auto' })]
               },
               unit_amount: item.priceInCents
             },
