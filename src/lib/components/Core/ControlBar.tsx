@@ -73,24 +73,31 @@ function ControlBar() {
         <SideNavBar opened={opened} closeSideBar={() => handlers.close()} />
       </div>
 
-      <div className="flex items-center min-h-full gap-5 mr-4">
-        <TextInput
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              if (searchTerm) {
-                router.push(`/search/${searchTerm}`);
+      {/* Logo à esquerda */}
+      <Link href="/">
+        <div className="ml-3 font-logo text-3xl hidden lg:block">Zavy</div>
+      </Link>
+
+      <div className="flex items-center min-h-full gap-5 mr-4 flex-1">
+        <div className="flex-1 flex justify-center">
+          <TextInput
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.currentTarget.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                if (searchTerm) {
+                  router.push(`/search/${searchTerm}`);
+                }
               }
-            }
-          }}
-          className="mx-4"
-          classNames={{ input: classes.input }}
-          icon={<IconSearch size="15px" />}
-          placeholder="Search Zavy"
-          radius="xl"
-          size="sm"
-        />
+            }}
+            className="w-[min(900px,90vw)]"
+            classNames={{ input: classes.input }}
+            icon={<IconSearch size="15px" />}
+            placeholder="Search Zavy"
+            radius="xl"
+            size="sm"
+          />
+        </div>
 
         <div className={`mr-3 ${session ? 'mt-3' : ''}`}>
           <Indicator label={data ?? 0} inline size={22} disabled={!session}>
@@ -139,10 +146,10 @@ function ControlBar() {
 
               <Menu.Dropdown>
                 <Menu.Label>{session?.user?.name}</Menu.Label>
-                <Menu.Item component={Link} href="/dashboard/buyer" icon={<IconHome size={14} />}>
+                <Menu.Item component={Link} href="/dashboard/buyer" icon={<IconHome size={14} />}> 
                   Dashboard
                 </Menu.Item>
-                <Menu.Item onClick={() => signOut()} icon={<IconLogout size={14} />}>
+                <Menu.Item onClick={() => signOut()} icon={<IconLogout size={14} />}> 
                   Logout
                 </Menu.Item>
               </Menu.Dropdown>
