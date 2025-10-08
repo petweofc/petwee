@@ -85,14 +85,15 @@ function ProductModal({ opened, setOpened }: ProductModalProps) {
   useEffect(() => {
     register('image');
     const setImageValue = async () => {
-      if (cropSrc) {
-        let base64 = (await getBase64FromBlobURI(cropSrc)) as string;
-        setValue('image', base64);
+      if (cropSrc || src) {
+        let base64 = (await getBase64FromBlobURI(cropSrc ?? src)) as string;
+        // Ensure RHF validates immediately so the submit is not blocked
+        setValue('image', base64, { shouldValidate: true, shouldDirty: true });
         return;
       }
     };
     setImageValue();
-  }, [register, cropSrc, setValue]);
+  }, [register, cropSrc, src, setValue]);
 
   const productSubmit = async (product: Product) => {
     if (createProduct.isLoading) {

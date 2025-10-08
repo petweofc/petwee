@@ -1,4 +1,5 @@
 import { createStyles, Avatar, Text, Group, Indicator } from '@mantine/core';
+import { cloudinaryUrl } from '@/utils/client/cloudinaryUrl';
 import { IconAlertCircle, IconTag } from '@tabler/icons';
 import Link from 'next/link';
 
@@ -35,7 +36,7 @@ export function ItemInfo({
       <Group>
         <Indicator label={quantity} disabled={!isForCheckout} inline size={22}>
           <Avatar
-            src={`https://res.cloudinary.com/dv9wpbflv/image/upload/w_100,f_auto,q_auto/v${image}.jpg`}
+            src={cloudinaryUrl(image, { transformations: 'w_100,f_auto,q_auto' })}
             size={94}
             radius="md"
           />

@@ -1,6 +1,7 @@
 import { Button, Spoiler, AspectRatio, Text, Skeleton, Loader } from '@mantine/core';
 import { trpc } from '@/utils/trpc';
 import Image from 'next/image';
+import { cloudinaryUrl } from '@/utils/client/cloudinaryUrl';
 import { QuantityInput } from '@/lib/components/Products/QuantityInput';
 import { IconShoppingCart, IconAlertCircle } from '@tabler/icons';
 import { useState } from 'react';
@@ -55,7 +56,7 @@ const Product = ({ id, title, image, description, category, price, stock }: Prod
               <Skeleton visible={loading} radius={0}>
                 <Image
                   fill={true}
-                  src={`https://res.cloudinary.com/dv9wpbflv/image/upload/f_auto,q_auto/v${image}.jpg`}
+                  src={cloudinaryUrl(image, { transformations: 'f_auto,q_auto' })}
                   alt="Product Image"
                   onLoad={() => setLoading(false)}
                 />
