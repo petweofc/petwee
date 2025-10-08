@@ -3,6 +3,7 @@ import { Title } from '@mantine/core';
 import NextError from 'next/error';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
+import { cloudinaryUrl } from '@/utils/client/cloudinaryUrl';
 
 function ProductCards({
   category,
@@ -71,7 +72,7 @@ function ProductCards({
                 title={e.title}
                 description={e.description}
                 price={(+e.priceInCents / 100).toString()}
-                image={`https://res.cloudinary.com/dv9wpbflv/image/upload/f_auto,q_auto/v${e.image}.jpg`}
+                image={cloudinaryUrl(e.image, { transformations: 'f_auto,q_auto' })}
               />
             );
           })}
