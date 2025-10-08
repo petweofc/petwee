@@ -22,6 +22,14 @@ model User {
   setupComplete Boolean   @default(false)
   password      String?
   image         String?
+  // Extended profile fields for richer signup
+  fullName      String?
+  mobilePhone   String?
+  gender        Gender?
+  birthDate     DateTime?
+  cpf           String?   @unique
+  termsConsent  Boolean   @default(false)
+  accountType   AccountType? // individual or company
   accounts      Account[]
   sessions      Session[]
   buyer         Buyer?
@@ -187,4 +195,17 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+}
+
+// Signup-related enums
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum AccountType {
+  INDIVIDUAL
+  COMPANY
 }

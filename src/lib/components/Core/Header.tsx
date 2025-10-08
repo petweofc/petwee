@@ -1,10 +1,21 @@
 import { useMantineColorScheme } from '@mantine/core';
 import ControlBar from './ControlBar';
 import NavBar from './NavBar';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 function Header() {
   const { colorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
+  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
     <div
