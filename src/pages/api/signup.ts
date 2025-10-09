@@ -34,14 +34,17 @@ type ErrorResponse = {
 type SignUpResponse = CredentialsResponse | ErrorResponse;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<SignUpResponse>) {
+  console.log('[api/signup] method:', req.method);
   if (req.method !== 'POST') {
     return res.status(200).json({ message: 'method not allowed' });
   }
 
   const userCredentials: Credentials = req.body;
+  console.log('[api/signup] body (sanitized):', { username: (userCredentials as any)?.username, name: (userCredentials as any)?.name });
   const parse = credentials.safeParse(userCredentials);
 
   if (!parse.success) {
+    console.warn('[api/signup] zod parse fail:', parse.error?.errors?.map((e) => e.message));
     return res.status(400).json({ message: 'Something wrong with your input' });
   }
 
@@ -57,10 +60,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     if (user) {
+      console.warn('[api/signup] username already exists:', username);
       return res.status(409).json({ message: 'This username already exists' });
     }
 
     const hash = await argon2.hash(password);
+    console.log('[api/signup] password hashed');
 
     const newUser = await prisma.user.create({
       data: {
@@ -69,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         password: hash
       }
     });
+    console.log('[api/signup] user created:', { id: newUser.id, username: newUser.username });
 
     await prisma.account.create({
       data: {
@@ -78,6 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         type: 'credentials'
       }
     });
+    console.log('[api/signup] credentials account created');
 
     if (newUser.name && newUser.username) {
       return res.status(200).json({
@@ -87,8 +94,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     }
 
+    console.error('[api/signup] unexpected: user created but name/username missing');
     return res.status(500).json({ message: 'Something went wrong' });
   } catch (error) {
+    console.error('[api/signup] unexpected error:', error);
     return res.status(500).json({ message: 'An Error Occured' });
   }
 }

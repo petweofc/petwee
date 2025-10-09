@@ -35,10 +35,10 @@ function Footer() {
     <footer className="w-full bg-white border-t mt-10">
       {/* Carrossel de marcas */}
       <div className="relative py-4">
-        <div className="w-[max(92%,1400px)] mx-auto">
+        <div className="relative max-w-[1400px] w-full mx-auto px-4 md:px-6">
           <div
             ref={trackRef}
-            className="flex gap-6 overflow-x-auto scroll-smooth py-2"
+            className="flex gap-6 justify-center overflow-x-hidden py-2 px-6"
           >
             {brands.map((b, i) => (
               <img
@@ -71,7 +71,7 @@ function Footer() {
       </div>
 
       {/* Conteúdo principal do rodapé */}
-      <div className="w-[max(92%,1400px)] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 py-8">
+      <div className="max-w-[1400px] w-full mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 py-8 px-4 md:px-6">
         <div>
           <h4 className="text-gray-800 font-medium mb-3">Atendimento ao Cliente</h4>
           <p className="text-sm text-gray-600 mb-3">Estamos aqui para ajudar você.</p>
@@ -121,7 +121,7 @@ function Footer() {
       </div>
 
       {/* Redes sociais */}
-      <div className="w-[max(92%,1400px)] mx-auto border-t py-4">
+      <div className="max-w-[1400px] w-full mx-auto border-t py-4 px-4 md:px-6">
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">Redes Sociais</span>
           <Link href="#" className="text-gray-700 hover:text-gray-900"><IconBrandFacebook size={18} /></Link>
@@ -132,7 +132,7 @@ function Footer() {
       </div>
 
       {/* Pagamento e segurança */}
-      <div className="w-[max(92%,1400px)] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+      <div className="max-w-[1400px] w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 py-4 px-4 md:px-6">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-gray-600 mr-2">Formas de pagamento</span>
           {['Visa', 'Mastercard', 'Pix', 'Boleto', 'Amex'].map((p, i) => (
@@ -153,7 +153,7 @@ function Footer() {
       </div>
 
       {/* Copyright */}
-      <div className="w-[max(92%,1400px)] mx-auto text-[12px] text-gray-500 py-4 border-t">
+      <div className="max-w-[1400px] w-full mx-auto text-[12px] text-gray-500 py-4 border-t px-4 md:px-6">
         © Zavy — Conteúdo mockado para demonstração.
       </div>
     </footer>

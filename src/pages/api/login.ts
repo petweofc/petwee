@@ -29,14 +29,17 @@ type ErrorResponse = {
 type LogInResponse = CredentialsResponse | ErrorResponse;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<LogInResponse>) {
+  console.log('[api/login] method:', req.method);
   if (req.method !== 'POST') {
     return res.status(200).json({ message: 'method not allowed' });
   }
 
   const userCredentials: Credentials = req.body;
+  console.log('[api/login] body (sanitized):', { username: (userCredentials as any)?.username });
   const parse = credentials.safeParse(userCredentials);
 
   if (!parse.success) {
+    console.warn('[api/login] zod parse fail:', parse.error?.errors?.map((e) => e.message));
     return res.status(400).json({ message: 'Something wrong with your input' });
   }
 
@@ -49,10 +52,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         username: username
       }
     });
+    console.log('[api/login] user lookup:', user ? 'FOUND' : 'NOT_FOUND');
 
     if (user && user.password) {
-      if (await argon2.verify(user.password, password)) {
+      const verified = await argon2.verify(user.password, password);
+      console.log('[api/login] password verify:', verified ? 'OK' : 'FAILED');
+      if (verified) {
         if (user.name && user.username) {
+          console.log('[api/login] login success:', { id: user.id, username: user.username });
           return res.status(200).json({
             name: user.name,
             username: user.username,
@@ -60,12 +67,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           });
         }
       } else {
+        console.warn('[api/login] invalid credentials for username:', username);
         return res.status(409).json({ message: 'Invalid Credentials' });
       }
     }
 
+    console.warn('[api/login] no such user for username:', username);
     return res.status(500).json({ message: 'No Such User' });
   } catch (error) {
+    console.error('[api/login] unexpected error:', error);
     return res.status(500).json({ message: 'An Error Occured' });
   }
 }

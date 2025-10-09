@@ -7,7 +7,8 @@ import {
   PasswordInput,
   Checkbox,
   Button,
-  Title
+  Title,
+  Alert
 } from '@mantine/core';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -108,25 +109,53 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
     setisLoading(false);
     if (!isForSignUp) {
       setisLoading(true);
-      const res = await signIn('credentials', {
-        username: data.username,
-        password: data.password,
-        type: 'login',
-        redirect: false
-      });
+      // Pré-validação para trazer mensagens específicas do backend
+      try {
+        const check = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: data.username, password: data.password })
+        });
+        const payload = await check.json().catch(() => ({}));
 
-      if (res && res.ok) {
-        setMessage('Signed In Successfully, Redirecting...');
-        setisLoading(false);
-        router.push('/');
-      } else {
-        setError('Invalid Credentials');
+        if (check.status === 200) {
+          const res = await signIn('credentials', {
+            username: data.username,
+            password: data.password,
+            type: 'login',
+            redirect: false
+          });
+
+          if (res && res.ok) {
+            setMessage('Signed In Successfully, Redirecting...');
+            setisLoading(false);
+            router.push('/');
+          } else {
+            setError('Erro ao autenticar. Tente novamente.');
+            setisLoading(false);
+          }
+        } else if (check.status === 409) {
+          setError('Credenciais inválidas. Verifique usuário e senha.');
+          setisLoading(false);
+        } else if (check.status === 400) {
+          setError('Entrada inválida. Corrija os campos e tente novamente.');
+          setisLoading(false);
+        } else if (check.status === 500) {
+          // Backend usa 500 para usuário inexistente
+          setError('Usuário não encontrado.');
+          setisLoading(false);
+        } else {
+          setError((payload as any)?.message || 'Erro inesperado ao fazer login.');
+          setisLoading(false);
+        }
+      } catch (e) {
+        setError('Falha de conexão com o servidor.');
         setisLoading(false);
       }
     } else {
       setisLoading(true);
       const res = await signIn('credentials', {
-        name: data.username,
+        name: (data as any).name,
         username: data.username,
         password: data.password,
         type: 'signup',
@@ -138,7 +167,7 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
         setisLoading(false);
         router.push('/');
       } else {
-        setError('Invalid Credentials');
+        setError('Erro ao criar conta. Verifique os dados.');
         setisLoading(false);
       }
     }
@@ -210,6 +239,16 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
             {isLoading ? <Loader color="white" variant="dots" /> : buttonTitle}
           </Button>
         </form>
+        {error && (
+          <Alert color="red" mt="md">
+            {error}
+          </Alert>
+        )}
+        {message && (
+          <Alert color="green" mt="md">
+            {message}
+          </Alert>
+        )}
         {loginExistense}
       </Paper>
     </div>

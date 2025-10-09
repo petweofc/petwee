@@ -24,6 +24,7 @@ type ClientSession = {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -43,41 +44,65 @@ export const authOptions: NextAuthOptions = {
           password: string;
           type?: string;
         };
-
+        
         if (type === 'login') {
           const loginEndpoint = process.env.NEXTAUTH_LOGIN;
-          const res = await fetch(loginEndpoint, {
-            method: 'POST',
-            body: JSON.stringify({
-              username,
-              password
-            }),
-            headers: { 'Content-Type': 'application/json' }
-          });
+          console.log('[NextAuth][authorize][login] endpoint:', loginEndpoint, 'username:', username);
+          try {
+            const res = await fetch(loginEndpoint, {
+              method: 'POST',
+              body: JSON.stringify({
+                username,
+                password
+              }),
+              headers: { 'Content-Type': 'application/json' }
+            });
 
-          const user: UserResponse = await res.json();
+            console.log('[NextAuth][authorize][login] response status:', res.status);
+            let user: UserResponse | null = null;
+            try {
+              user = (await res.json()) as UserResponse;
+            } catch (e) {
+              console.error('[NextAuth][authorize][login] JSON parse failed:', e);
+            }
+            console.log('[NextAuth][authorize][login] response body:', user);
 
-          if (res.ok && user) {
-            return user;
+            if (res.ok && user) {
+              return user;
+            }
+          } catch (error) {
+            console.error('[NextAuth][authorize][login] fetch error:', error);
           }
         }
 
         if (type === 'signup') {
           const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
-          const res = await fetch(signupEndpoint, {
-            method: 'POST',
-            body: JSON.stringify({
-              name,
-              username,
-              password
-            }),
-            headers: { 'Content-Type': 'application/json' }
-          });
+          console.log('[NextAuth][authorize][signup] endpoint:', signupEndpoint, 'username:', username);
+          try {
+            const res = await fetch(signupEndpoint, {
+              method: 'POST',
+              body: JSON.stringify({
+                name,
+                username,
+                password
+              }),
+              headers: { 'Content-Type': 'application/json' }
+            });
 
-          const user: UserResponse = await res.json();
+            console.log('[NextAuth][authorize][signup] response status:', res.status);
+            let user: UserResponse | null = null;
+            try {
+              user = (await res.json()) as UserResponse;
+            } catch (e) {
+              console.error('[NextAuth][authorize][signup] JSON parse failed:', e);
+            }
+            console.log('[NextAuth][authorize][signup] response body:', user);
 
-          if (res.ok && user) {
-            return user;
+            if (res.ok && user) {
+              return user;
+            }
+          } catch (error) {
+            console.error('[NextAuth][authorize][signup] fetch error:', error);
           }
         }
         return null;
