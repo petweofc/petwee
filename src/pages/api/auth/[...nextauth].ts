@@ -107,6 +107,7 @@ export const authOptions: NextAuthOptions = {
               stateRegistration,
               stateRegistrationIsento: (credentials as any)?.stateRegistrationIsento,
               alternatePhone: (credentials as any)?.alternatePhone,
+              marketingOptIn: (credentials as any)?.marketingOptIn,
               pfDefinition: (credentials as any)?.pfDefinition,
               pjDefinition: (credentials as any)?.pjDefinition,
               // endereço
@@ -114,6 +115,7 @@ export const authOptions: NextAuthOptions = {
               addressLine1: (credentials as any)?.addressLine1,
               addressLine2: (credentials as any)?.addressLine2,
               StreetNumber: (credentials as any)?.StreetNumber,
+              district: (credentials as any)?.district,
               city: (credentials as any)?.city,
               postalCode: (credentials as any)?.postalCode,
               region: (credentials as any)?.region,

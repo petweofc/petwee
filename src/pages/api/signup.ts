@@ -4,6 +4,23 @@ import { randomUUID } from 'crypto';
 import argon2 from 'argon2';
 import * as z from 'zod';
 
+// Validação de CPF (remoção de não dígitos e cálculo dos dígitos verificadores)
+const isValidCPF = (value: string) => {
+  const cpf = (value || '').replace(/\D/g, '');
+  if (!cpf || cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i), 10) * (10 - i);
+  let rev = 11 - (sum % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  if (rev !== parseInt(cpf.charAt(9), 10)) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i), 10) * (11 - i);
+  rev = 11 - (sum % 11);
+  if (rev === 10 || rev === 11) rev = 0;
+  return rev === parseInt(cpf.charAt(10), 10);
+};
+
 // Permite cadastro PF/PJ. "username" seguirá sendo o e-mail para compatibilidade.
 const credentials = z
   .object({
@@ -14,7 +31,8 @@ const credentials = z
     username: z
       .string()
       .min(1, { message: 'E-mail não pode estar vazio' })
-      .max(100, { message: 'E-mail muito longo' }),
+      .max(100, { message: 'E-mail muito longo' })
+      .email('E-mail inválido'),
     password: z
       .string()
       .min(8, { message: 'A senha deve ter ao menos 8 caracteres' })
@@ -31,6 +49,7 @@ const credentials = z
     stateRegistration: z.string().optional(),
     stateRegistrationIsento: z.boolean().optional(),
     alternatePhone: z.string().optional(),
+    marketingOptIn: z.boolean().optional(),
     pfDefinition: z
       .enum([
         'PETSHOP',
@@ -57,11 +76,12 @@ const credentials = z
         'DROPSHIPPING'
       ])
       .optional(),
-    // Endereço inicial (opcional)
+    // Endereço inicial
     addressLabel: z.string().optional(),
     addressLine1: z.string().optional(),
     addressLine2: z.string().optional(),
     StreetNumber: z.string().optional(),
+    district: z.string().optional(),
     city: z.string().optional(),
     postalCode: z.string().optional(),
     region: z.string().optional(),
@@ -81,7 +101,128 @@ const credentials = z
       message: 'Informe CPF para PF ou CNPJ para PJ',
       path: ['cpf']
     }
-  );
+  )
+  .superRefine((data, ctx) => {
+    // Validações adicionais por perfil conforme telas
+    if (data.personType === 'PF') {
+      if (!data.name) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['name'], message: 'Nome completo é obrigatório' });
+      }
+      if (!data.cpf) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cpf'], message: 'CPF é obrigatório' });
+      } else if (!isValidCPF(data.cpf)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cpf'], message: 'CPF inválido' });
+      }
+      if (!data.birthDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'Data de nascimento é obrigatória' });
+      }
+      if (!data.gender) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['gender'], message: 'Sexo é obrigatório' });
+      }
+      if (!data.phone) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: 'Telefone é obrigatório' });
+      }
+      if (!data.pfDefinition) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pfDefinition'], message: 'Selecione o que te define melhor' });
+      }
+      // Endereço obrigatório
+      if (!data.addressLabel) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['addressLabel'], message: 'Nome identificador é obrigatório' });
+      }
+      if (!data.postalCode) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['postalCode'], message: 'CEP é obrigatório' });
+      } else if (!/^\d{5}-?\d{3}$/.test(data.postalCode)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['postalCode'], message: 'CEP inválido' });
+      }
+      if (!data.addressLine1) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['addressLine1'], message: 'Endereço é obrigatório' });
+      }
+      if (!data.StreetNumber) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['StreetNumber'], message: 'Número é obrigatório' });
+      }
+      if (!data.district) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['district'], message: 'Bairro é obrigatório' });
+      }
+      if (!data.region) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['region'], message: 'Estado é obrigatório' });
+      }
+      if (!data.city) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'Cidade é obrigatória' });
+      }
+    }
+    if (data.personType === 'PJ') {
+      if (!data.companyName) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['companyName'], message: 'Razão social é obrigatória' });
+      }
+      if (!data.cnpj) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cnpj'], message: 'CNPJ é obrigatório' });
+      }
+    }
+
+    // Endereço mínimo: se houver addressLine1, exigir cidade e estado
+    if (data.addressLine1) {
+      if (!data.city) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'Cidade é obrigatória' });
+      }
+      if (!data.region) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['region'], message: 'Estado é obrigatório' });
+      }
+    }
+
+    if (data.personType === 'PJ') {
+      if (!data.companyName) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['companyName'], message: 'Razão social é obrigatória' });
+      }
+      if (!data.tradeName) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['tradeName'], message: 'Nome fantasia é obrigatório' });
+      }
+      if (!data.cnpj) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cnpj'], message: 'CNPJ é obrigatório' });
+      }
+      if (!data.whatsapp) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['whatsapp'], message: 'WhatsApp é obrigatório' });
+      }
+      if (!data.pjDefinition) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pjDefinition'], message: 'Selecione o que te define melhor' });
+      }
+      // IE obrigatório exceto quando Isento
+      if (!data.stateRegistrationIsento && !data.stateRegistration) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['stateRegistration'], message: 'Inscrição estadual é obrigatória (ou marque Isento)' });
+      }
+      // Dados pessoais do responsável
+      if (!data.name) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['name'], message: 'Nome completo é obrigatório' });
+      }
+      if (!data.birthDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['birthDate'], message: 'Data de nascimento é obrigatória' });
+      }
+      if (!data.gender) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['gender'], message: 'Sexo é obrigatório' });
+      }
+      // Endereço obrigatório
+      if (!data.addressLabel) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['addressLabel'], message: 'Nome identificador é obrigatório' });
+      }
+      if (!data.postalCode) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['postalCode'], message: 'CEP é obrigatório' });
+      }
+      if (!data.addressLine1) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['addressLine1'], message: 'Endereço é obrigatório' });
+      }
+      if (!data.StreetNumber) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['StreetNumber'], message: 'Número é obrigatório' });
+      }
+      if (!data.district) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['district'], message: 'Bairro é obrigatório' });
+      }
+      if (!data.region) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['region'], message: 'Estado é obrigatório' });
+      }
+      if (!data.city) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'Cidade é obrigatória' });
+      }
+    }
+  });
 
 type Credentials = z.infer<typeof credentials>;
 
@@ -131,12 +272,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const stateRegistration = parse.data.stateRegistration;
   const stateRegistrationIsento = parse.data.stateRegistrationIsento;
   const alternatePhone = parse.data.alternatePhone;
+  const marketingOptIn = parse.data.marketingOptIn;
   const pfDefinition = parse.data.pfDefinition;
   const pjDefinition = parse.data.pjDefinition;
   const addressLabel = parse.data.addressLabel;
   const addressLine1 = parse.data.addressLine1;
   const addressLine2 = parse.data.addressLine2;
   const StreetNumber = parse.data.StreetNumber;
+  const district = parse.data.district;
   const city = parse.data.city;
   const postalCode = parse.data.postalCode;
   const region = parse.data.region;
@@ -157,6 +300,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const hash = await argon2.hash(password);
     console.log('[api/signup] password hashed');
 
+    const parsedBirthDate = birthDate && /^(\d{2})\/(\d{2})\/(\d{4})$/.test(birthDate)
+      ? new Date(`${birthDate.slice(6, 10)}-${birthDate.slice(3, 5)}-${birthDate.slice(0, 2)}`)
+      : (birthDate ? new Date(birthDate) : undefined);
+
     const newUser = await prisma.user.create({
       data: ({
         name: name,
@@ -166,7 +313,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         personType: personType as any,
         cpf: cpf || undefined,
         cnpj: cnpj || undefined,
-        birthDate: birthDate ? new Date(birthDate) : undefined,
+        birthDate: parsedBirthDate,
         gender: gender || undefined,
         phone: phone || undefined,
         whatsapp: whatsapp || undefined,
@@ -175,6 +322,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         stateRegistration: stateRegistration || undefined,
         stateRegistrationIsento: stateRegistrationIsento ?? undefined,
         alternatePhone: alternatePhone || undefined,
+        marketingOptIn: marketingOptIn ?? undefined,
         pfDefinition: pfDefinition ? (pfDefinition as any) : undefined,
         pjDefinition: pjDefinition ? (pjDefinition as any) : undefined,
         buyer: {
@@ -188,6 +336,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                       addressLine1: addressLine1,
                       addressLine2: addressLine2 || undefined,
                       StreetNumber: StreetNumber || undefined,
+                      district: district || undefined,
                       city: city || 'Cidade',
                       postalCode: postalCode || undefined,
                       region: region || 'Estado',

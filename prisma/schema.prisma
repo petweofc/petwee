@@ -35,6 +35,7 @@ model User {
   stateRegistration String?
   stateRegistrationIsento Boolean?
   alternatePhone String?
+  marketingOptIn Boolean?
   // Definições de perfil
   pfDefinition  PFDefinition?
   pjDefinition  PJDefinition?
@@ -151,6 +152,7 @@ model Address {
   addressLine2 String?
   city         String
   postalCode   String?
+  district     String?
   label        String?
   region       String
   country      String
