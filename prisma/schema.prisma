@@ -22,10 +22,31 @@ model User {
   setupComplete Boolean   @default(false)
   password      String?
   image         String?
+  // --- Dados PF/PJ ---
+  personType    PersonType?
+  cpf           String?   @unique
+  cnpj          String?   @unique
+  birthDate     DateTime?
+  gender        String?
+  phone         String?
+  whatsapp      String?
+  companyName   String?
+  tradeName     String?
+  stateRegistration String?
+  stateRegistrationIsento Boolean?
+  alternatePhone String?
+  // Definições de perfil
+  pfDefinition  PFDefinition?
+  pjDefinition  PJDefinition?
   accounts      Account[]
   sessions      Session[]
   buyer         Buyer?
   seller        Seller?
+}
+
+enum PersonType {
+  PF
+  PJ
 }
 
 model Buyer {
@@ -130,6 +151,7 @@ model Address {
   addressLine2 String?
   city         String
   postalCode   String?
+  label        String?
   region       String
   country      String
   buyer        Buyer    @relation(fields: [buyerId], references: [id])
@@ -187,4 +209,30 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+}
+
+// Enum para "O que te define melhor" (PF)
+enum PFDefinition {
+  PETSHOP
+  BANHO_TOSA
+  CLINICA_VETERINARIA
+  PENSANDO_NEGOCIO
+  VENDAS_ONLINE
+  OUTRO_RAMO
+  CONSUMIDOR_FINAL
+  VENDEDOR_REPRESENTANTE
+  DROPSHIPPING
+}
+
+// Enum para "O que te define melhor" (PJ)
+enum PJDefinition {
+  PETSHOP
+  BANHO_TOSA
+  CLINICA_VETERINARIA
+  PENSANDO_NEGOCIO
+  VENDAS_ONLINE
+  OUTRO_RAMO
+  CONSUMIDOR_FINAL
+  VENDEDOR_REPRESENTANTE
+  DROPSHIPPING
 }

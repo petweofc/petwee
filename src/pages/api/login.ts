@@ -4,14 +4,15 @@ import argon2 from 'argon2';
 import * as z from 'zod';
 
 const credentials = z.object({
+  // Agora aceitamos e-mail OU username no mesmo campo
   username: z
     .string()
-    .min(1, { message: 'Username cannot be empty' })
-    .max(50, { message: 'Username should be under 50 characters' }),
+    .min(1, { message: 'E-mail ou usuário não pode ser vazio' })
+    .max(100, { message: 'E-mail/usuário muito longo' }),
   password: z
     .string()
-    .min(8, { message: 'Password should be at least 8 characters' })
-    .max(64, { message: 'Password should be under 64 characters' })
+    .min(8, { message: 'Senha deve ter ao menos 8 caracteres' })
+    .max(64, { message: 'Senha muito longa' })
 });
 
 type Credentials = z.infer<typeof credentials>;
@@ -47,9 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const password = parse.data.password;
 
   try {
-    const user = await prisma.user.findUnique({
+    // Procura por e-mail OU por username
+    const user = await prisma.user.findFirst({
       where: {
-        username: username
+        OR: [{ email: username }, { username: username }]
       }
     });
     console.log('[api/login] user lookup:', user ? 'FOUND' : 'NOT_FOUND');
@@ -58,11 +60,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const verified = await argon2.verify(user.password, password);
       console.log('[api/login] password verify:', verified ? 'OK' : 'FAILED');
       if (verified) {
-        if (user.name && user.username) {
+        if (user.name && (user.username || user.email)) {
           console.log('[api/login] login success:', { id: user.id, username: user.username });
           return res.status(200).json({
             name: user.name,
-            username: user.username,
+            username: user.username ?? user.email ?? '',
             id: user.id
           });
         }

@@ -37,13 +37,23 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {},
-      async authorize(credentials, req) {
-        const { name, username, password, type } = credentials as {
-          name?: string;
-          username: string;
-          password: string;
-          type?: string;
-        };
+      async authorize(credentials: any, req) {
+        const {
+          name,
+          username,
+          password,
+          type,
+          personType,
+          cpf,
+          cnpj,
+          birthDate,
+          gender,
+          phone,
+          whatsapp,
+          companyName,
+          tradeName,
+          stateRegistration
+        } = credentials as any;
         
         if (type === 'login') {
           const loginEndpoint = process.env.NEXTAUTH_LOGIN;
@@ -79,15 +89,38 @@ export const authOptions: NextAuthOptions = {
           const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
           console.log('[NextAuth][authorize][signup] endpoint:', signupEndpoint, 'username:', username);
           try {
-            const res = await fetch(signupEndpoint, {
-              method: 'POST',
-              body: JSON.stringify({
-                name,
-                username,
-                password
-              }),
-              headers: { 'Content-Type': 'application/json' }
-            });
+          const res = await fetch(signupEndpoint, {
+            method: 'POST',
+            body: JSON.stringify({
+              name,
+              username,
+              password,
+              personType,
+              cpf,
+              cnpj,
+              birthDate,
+              gender,
+              phone,
+              whatsapp,
+              companyName,
+              tradeName,
+              stateRegistration,
+              stateRegistrationIsento: (credentials as any)?.stateRegistrationIsento,
+              alternatePhone: (credentials as any)?.alternatePhone,
+              pfDefinition: (credentials as any)?.pfDefinition,
+              pjDefinition: (credentials as any)?.pjDefinition,
+              // endereço
+              addressLabel: (credentials as any)?.addressLabel,
+              addressLine1: (credentials as any)?.addressLine1,
+              addressLine2: (credentials as any)?.addressLine2,
+              StreetNumber: (credentials as any)?.StreetNumber,
+              city: (credentials as any)?.city,
+              postalCode: (credentials as any)?.postalCode,
+              region: (credentials as any)?.region,
+              country: (credentials as any)?.country || 'Brasil'
+            }),
+            headers: { 'Content-Type': 'application/json' }
+          });
 
             console.log('[NextAuth][authorize][signup] response status:', res.status);
             let user: UserResponse | null = null;

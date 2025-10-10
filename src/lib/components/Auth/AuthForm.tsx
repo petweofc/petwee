@@ -28,14 +28,15 @@ interface LoginFormProps {
 }
 
 let baseSchema = {
+  // Mantemos o campo "username" por compatibilidade, mas a UI usa E-mail
   username: z
     .string()
-    .min(1, { message: 'Username cannot be empty' })
-    .max(50, { message: 'Username should be under 50 characters' }),
+    .min(1, { message: 'E-mail não pode ser vazio' })
+    .max(100, { message: 'E-mail muito longo' }),
   password: z
     .string()
-    .min(8, { message: 'Password should be at least 8 characters' })
-    .max(64, { message: 'Password should be under 64 characters' })
+    .min(8, { message: 'Senha deve ter ao menos 8 caracteres' })
+    .max(64, { message: 'Senha muito longa' })
 };
 
 const loginFormSchema = z.object(baseSchema);
@@ -179,16 +180,16 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   if (isForSignUp) {
     nameInput = (
       <>
-        <TextInput {...register('name')} label="Name" placeholder="Name" size="md" />
+        <TextInput {...register('name')} label="Nome" placeholder="Seu nome" size="md" />
         {errors.name?.message && <span className="text-red-700">ⓘ {errors.name?.message}</span>}
       </>
     );
     loginExistense = (
-      <UserAuthCheck message="Already have an account?" action="Log in" link="/login" />
+      <UserAuthCheck message="Já possui conta?" action="Entrar" link="/login" />
     );
   } else {
     loginExistense = (
-      <UserAuthCheck message={"Don't have an account?"} action="Sign up" link="/signup" />
+      <UserAuthCheck message={"Cliente novo?"} action="Cadastrar" link="/signup" />
     );
   }
 
@@ -210,14 +211,14 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           </FacebookButton>
         </Group>
 
-        <Divider label="Or continue with email" labelPosition="center" my="lg" />
+        <Divider label="Ou entre com e-mail" labelPosition="center" my="lg" />
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {nameInput}
           <TextInput
             {...register('username')}
-            label="Username"
-            placeholder="Username"
+            label="E-mail"
+            placeholder="seu@email.com"
             mt="md"
             size="md"
           />
@@ -226,15 +227,18 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           )}
           <PasswordInput
             {...register('password')}
-            label="Password"
-            placeholder="Your password"
+            label="Senha"
+            placeholder="Sua senha"
             mt="md"
             size="md"
           />
           {errors.password?.message && (
             <span className="text-red-700">ⓘ {errors.password?.message}</span>
           )}
-          <Checkbox label="Keep me logged in" mt="xl" size="md" />
+          <div className="mt-2 mb-2 text-right">
+            <Link href="#" className="text-blue-700 text-sm">Esqueci minha senha</Link>
+          </div>
+          <Checkbox label="Manter-me conectado" mt="xl" size="md" />
           <Button type="submit" className="bg-black hover:bg-slate-800" fullWidth mt="xl" size="md">
             {isLoading ? <Loader color="white" variant="dots" /> : buttonTitle}
           </Button>
