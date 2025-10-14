@@ -5,12 +5,13 @@ import Layout from '@/lib/components/Layouts/Layout';
 import { useSession, signOut } from 'next-auth/react';
 import ProductCards from '@/lib/components/Products/ProductCards';
 import BannerCarousel from '@/lib/components/Home/BannerCarousel';
+import ProductCarousel from '@/lib/components/Products/ProductCarousel';
 
 const Home: PageWithLayout = () => {
   const { data: session, status } = useSession();
 
   return (
-    <div className="min-h-screen min-w-full text-white">
+    <div className="p-6 min-h-screen w-full overflow-x-hidden text-white">
       <Head>
         <title>Zavy</title>
         <meta name="description" content="An ecommerce store" />
@@ -18,6 +19,9 @@ const Home: PageWithLayout = () => {
       </Head>
       {/* Home Banners */}
       <BannerCarousel />
+
+      {/* Carrossel de Produtos */}
+      <ProductCarousel title="Produtos Exclusivos My Pet" />
 
       <ProductCards />
     </div>

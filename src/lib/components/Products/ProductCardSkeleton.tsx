@@ -2,8 +2,8 @@ import { Skeleton, AspectRatio } from '@mantine/core';
 
 function ProductCardSkeleton() {
   return (
-    <div className="w-[337px] rounded-md border border-gray-200">
-      <AspectRatio ratio={337 / 393} sx={{ maxWidth: '100%' }} className="relative">
+    <div className="w-[280px] rounded-md border border-gray-200">
+      <AspectRatio ratio={280 / 326} sx={{ maxWidth: '100%' }} className="relative">
         <Skeleton height={'100%'} radius={0} />
       </AspectRatio>
       <div className="p-4">

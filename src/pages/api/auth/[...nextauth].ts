@@ -24,6 +24,7 @@ type ClientSession = {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -36,56 +37,59 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {},
-      async authorize(credentials, req) {
+      async authorize(credentials: any, req) {
         const {
-          accountType,
-          fullName,
-          email,
-          mobilePhone,
-          phone,
-          gender,
-          birthDate,
-          cpf,
+          name,
           username,
           password,
           type,
-          termsConsent
-        } = credentials as unknown as {
-          accountType?: 'INDIVIDUAL' | 'COMPANY';
-          fullName?: string;
-          email?: string;
-          mobilePhone?: string;
-          phone?: string;
-          gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'UNDISCLOSED';
-          birthDate?: string;
-          cpf?: string;
-          username: string;
-          password: string;
-          type?: string;
-          termsConsent?: boolean;
-        };
-
+          personType,
+          cpf,
+          cnpj,
+          birthDate,
+          gender,
+          phone,
+          whatsapp,
+          companyName,
+          tradeName,
+          stateRegistration
+        } = credentials as any;
+        
         if (type === 'login') {
           const loginEndpoint = process.env.NEXTAUTH_LOGIN;
-          const res = await fetch(loginEndpoint, {
-            method: 'POST',
-            body: JSON.stringify({
-              username,
-              password
-            }),
-            headers: { 'Content-Type': 'application/json' }
-          });
+          console.log('[NextAuth][authorize][login] endpoint:', loginEndpoint, 'username:', username);
+          try {
+            const res = await fetch(loginEndpoint, {
+              method: 'POST',
+              body: JSON.stringify({
+                username,
+                password
+              }),
+              headers: { 'Content-Type': 'application/json' }
+            });
 
-          const user: UserResponse = await res.json();
+            console.log('[NextAuth][authorize][login] response status:', res.status);
+            let user: UserResponse | null = null;
+            try {
+              user = (await res.json()) as UserResponse;
+            } catch (e) {
+              console.error('[NextAuth][authorize][login] JSON parse failed:', e);
+            }
+            console.log('[NextAuth][authorize][login] response body:', user);
 
-          if (res.ok && user) {
-            return user;
+            if (res.ok && user) {
+              return user;
+            }
+          } catch (error) {
+            console.error('[NextAuth][authorize][login] fetch error:', error);
           }
         }
 
         if (type === 'signup') {
           console.log('NextAuth signup credentials:', credentials);
           const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
+          console.log('[NextAuth][authorize][signup] endpoint:', signupEndpoint, 'username:', username);
+          try {
           const res = await fetch(signupEndpoint, {
             method: 'POST',
             body: JSON.stringify({
@@ -99,17 +103,49 @@ export const authOptions: NextAuthOptions = {
               cpf,
               username,
               password,
-              termsConsent
+              personType,
+              cpf,
+              cnpj,
+              birthDate,
+              gender,
+              phone,
+              whatsapp,
+              companyName,
+              tradeName,
+              stateRegistration,
+              stateRegistrationIsento: (credentials as any)?.stateRegistrationIsento,
+              alternatePhone: (credentials as any)?.alternatePhone,
+              marketingOptIn: (credentials as any)?.marketingOptIn,
+              pfDefinition: (credentials as any)?.pfDefinition,
+              pjDefinition: (credentials as any)?.pjDefinition,
+              // endereço
+              addressLabel: (credentials as any)?.addressLabel,
+              addressLine1: (credentials as any)?.addressLine1,
+              addressLine2: (credentials as any)?.addressLine2,
+              StreetNumber: (credentials as any)?.StreetNumber,
+              district: (credentials as any)?.district,
+              city: (credentials as any)?.city,
+              postalCode: (credentials as any)?.postalCode,
+              region: (credentials as any)?.region,
+              country: (credentials as any)?.country || 'Brasil'
             }),
             headers: { 'Content-Type': 'application/json' }
           });
 
-          console.log('Signup API response status:', res.status);
-          const user: UserResponse = await res.json();
-          console.log('Signup API response:', user);
+            console.log('[NextAuth][authorize][signup] response status:', res.status);
+            let user: UserResponse | null = null;
+            try {
+              user = (await res.json()) as UserResponse;
+            } catch (e) {
+              console.error('[NextAuth][authorize][signup] JSON parse failed:', e);
+            }
+            console.log('[NextAuth][authorize][signup] response body:', user);
 
-          if (res.ok && user) {
-            return user;
+            if (res.ok && user) {
+              return user;
+            }
+          } catch (error) {
+            console.error('[NextAuth][authorize][signup] fetch error:', error);
           }
         }
         return null;

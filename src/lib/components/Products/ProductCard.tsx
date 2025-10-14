@@ -17,7 +17,7 @@ function ProductCard({ id, title, image, description, price, status, badge }: Pr
   const [loading, setLoading] = useState<boolean>(true);
 
   return (
-    <div className="w-[337px]">
+    <div className="w-[280px]">
       <Link href={`/products/${id}`}>
         <Card p="lg" radius="md" withBorder className="relative">
           <Card.Section>
@@ -25,7 +25,7 @@ function ProductCard({ id, title, image, description, price, status, badge }: Pr
               <Badge className="absolute top-2 left-3 z-40 bg-black text-white">{badge}</Badge>
             )}
 
-            <AspectRatio ratio={337 / 393} sx={{ maxWidth: '100%' }} className="relative">
+            <AspectRatio ratio={280 / 326} sx={{ maxWidth: '100%' }} className="relative">
               <Skeleton visible={loading} radius={0}>
                 <Image
                   fill={true}

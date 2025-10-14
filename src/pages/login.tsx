@@ -9,6 +9,8 @@ import { GetServerSideProps } from 'next';
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { req, res } = ctx;
+  console.log('res', res);
+
   const session = await unstable_getServerSession(req, res, authOptions);
 
   if (session) {
