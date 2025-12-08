@@ -1,0 +1,17 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.viewport {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.viewport::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}

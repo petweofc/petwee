@@ -8,7 +8,11 @@ import {
   Checkbox,
   Button,
   Title,
+<<<<<<< HEAD
   Select
+=======
+  Alert
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 } from '@mantine/core';
 import Image from 'next/image';
 import { useForm, Controller } from 'react-hook-form';
@@ -46,14 +50,24 @@ interface LoginFormProps {
 }
 
 let baseSchema = {
+  // Mantemos o campo "username" por compatibilidade, mas a UI usa E-mail
   username: z
     .string()
+<<<<<<< HEAD
     .min(1, { message: 'Nome de usuário não pode estar vazio' })
     .max(50, { message: 'Nome de usuário deve ter menos de 50 caracteres' }),
   password: z
     .string()
     .min(8, { message: 'Senha deve ter pelo menos 8 caracteres' })
     .max(64, { message: 'Senha deve ter menos de 64 caracteres' })
+=======
+    .min(1, { message: 'E-mail não pode ser vazio' })
+    .max(100, { message: 'E-mail muito longo' }),
+  password: z
+    .string()
+    .min(8, { message: 'Senha deve ter ao menos 8 caracteres' })
+    .max(64, { message: 'Senha muito longa' })
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 };
 
 const loginFormSchema = z.object(baseSchema);
@@ -141,23 +155,52 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
     setisLoading(false);
     if (!isForSignUp) {
       setisLoading(true);
-      const res = await signIn('credentials', {
-        username: data.username,
-        password: data.password,
-        type: 'login',
-        redirect: false
-      });
+      // Pré-validação para trazer mensagens específicas do backend
+      try {
+        const check = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: data.username, password: data.password })
+        });
+        const payload = await check.json().catch(() => ({}));
 
-      if (res && res.ok) {
-        setMessage('Signed In Successfully, Redirecting...');
-        setisLoading(false);
-        router.push('/');
-      } else {
-        setError('Invalid Credentials');
+        if (check.status === 200) {
+          const res = await signIn('credentials', {
+            username: data.username,
+            password: data.password,
+            type: 'login',
+            redirect: false
+          });
+
+          if (res && res.ok) {
+            setMessage('Signed In Successfully, Redirecting...');
+            setisLoading(false);
+            router.push('/');
+          } else {
+            setError('Erro ao autenticar. Tente novamente.');
+            setisLoading(false);
+          }
+        } else if (check.status === 409) {
+          setError('Credenciais inválidas. Verifique usuário e senha.');
+          setisLoading(false);
+        } else if (check.status === 400) {
+          setError('Entrada inválida. Corrija os campos e tente novamente.');
+          setisLoading(false);
+        } else if (check.status === 500) {
+          // Backend usa 500 para usuário inexistente
+          setError('Usuário não encontrado.');
+          setisLoading(false);
+        } else {
+          setError((payload as any)?.message || 'Erro inesperado ao fazer login.');
+          setisLoading(false);
+        }
+      } catch (e) {
+        setError('Falha de conexão com o servidor.');
         setisLoading(false);
       }
     } else {
       setisLoading(true);
+<<<<<<< HEAD
       
       // Chamada direta para API de signup em vez de usar NextAuth
       const res = await fetch('/api/signup', {
@@ -178,6 +221,14 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           confirmPassword: (data as any).confirmPassword,
           termsConsent: (data as any).termsConsent,
         }),
+=======
+      const res = await signIn('credentials', {
+        name: (data as any).name,
+        username: data.username,
+        password: data.password,
+        type: 'signup',
+        redirect: false
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
       });
 
       const result = await res.json();
@@ -199,7 +250,11 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           router.push('/login');
         }
       } else {
+<<<<<<< HEAD
         setError(result.message || 'Erro ao criar conta');
+=======
+        setError('Erro ao criar conta. Verifique os dados.');
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
         setisLoading(false);
       }
     }
@@ -211,6 +266,7 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   if (isForSignUp) {
     signupInputs = (
       <>
+<<<<<<< HEAD
         <Controller
           name="accountType"
           control={control}
@@ -278,6 +334,18 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   } else {
     loginExistense = (
       <UserAuthCheck message={"Não tem uma conta?"} action="Cadastrar" link="/signup" />
+=======
+        <TextInput {...register('name')} label="Nome" placeholder="Seu nome" size="md" />
+        {errors.name?.message && <span className="text-red-700">ⓘ {errors.name?.message}</span>}
+      </>
+    );
+    loginExistense = (
+      <UserAuthCheck message="Já possui conta?" action="Entrar" link="/login" />
+    );
+  } else {
+    loginExistense = (
+      <UserAuthCheck message={"Cliente novo?"} action="Cadastrar" link="/signup" />
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
     );
   }
 
@@ -290,14 +358,32 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           </Link>
         </Title>
 
+<<<<<<< HEAD
         {/* Social login removed; proceeding with email/username form only */}
+=======
+        <Group grow mb="md" mt="md">
+          <GoogleButton onClick={() => signIn('google')} radius="xl">
+            Google
+          </GoogleButton>
+          <FacebookButton onClick={() => signIn('facebook')} radius="xl">
+            Facebook
+          </FacebookButton>
+        </Group>
+
+        <Divider label="Ou entre com e-mail" labelPosition="center" my="lg" />
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {signupInputs}
           <TextInput
             {...register('username')}
+<<<<<<< HEAD
             label="Nome de usuário"
             placeholder="Nome de usuário"
+=======
+            label="E-mail"
+            placeholder="seu@email.com"
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
             mt="md"
             size="md"
           />
@@ -314,6 +400,7 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           {errors.password?.message && (
             <span className="text-red-700">ⓘ {errors.password?.message}</span>
           )}
+<<<<<<< HEAD
           {isForSignUp && (
             <>
               <PasswordInput
@@ -329,11 +416,26 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
               <Checkbox {...register('termsConsent')} label="Concordo com os termos e condições" mt="md" size="md" />
             </>
           )}
+=======
+          <div className="mt-2 mb-2 text-right">
+            <Link href="#" className="text-blue-700 text-sm">Esqueci minha senha</Link>
+          </div>
+>>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
           <Checkbox label="Manter-me conectado" mt="xl" size="md" />
           <Button type="submit" className="bg-black hover:bg-slate-800" fullWidth mt="xl" size="md">
             {isLoading ? <Loader color="white" variant="dots" /> : buttonTitle}
           </Button>
         </form>
+        {error && (
+          <Alert color="red" mt="md">
+            {error}
+          </Alert>
+        )}
+        {message && (
+          <Alert color="green" mt="md">
+            {message}
+          </Alert>
+        )}
         {loginExistense}
       </Paper>
     </div>

@@ -26,7 +26,7 @@ export async function getCartItemsPrice(ctx: Context) {
     }
   });
 
-  const price: number = cart.reduce((price: number, bag) => {
+  const price: number = cart.reduce((price: number, bag: any) => {
     let currentItemPrice: number = (bag.itemCount * +bag.item.priceInCents) / 100;
     return price + currentItemPrice;
   }, 0);
@@ -106,7 +106,7 @@ export async function getSelectedOrderItems(ctx: Context) {
 
   if (!bags.length) return null;
 
-  let flattenedBag = bags.map((e) => {
+  let flattenedBag = bags.map((e: any) => {
     let bag = {
       id: e.id,
       itemCount: e.itemCount,
@@ -127,7 +127,7 @@ export async function getSelectedOrderItems(ctx: Context) {
     image: string;
   };
 
-  let reduce = flattenedBag.reduce((bag: Record<string, Bag[]>, item, i) => {
+  let reduce = flattenedBag.reduce((bag: Record<string, Bag[]>, item: Bag, i: number) => {
     bag[item.sellerId] = bag[item.sellerId] || [];
     bag[item.sellerId].push(item);
     return bag;
