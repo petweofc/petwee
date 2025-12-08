@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRef } from 'react';
 import {
   IconChevronLeft,
@@ -41,10 +42,12 @@ function Footer() {
             className="flex gap-6 justify-center overflow-x-hidden py-2 px-6"
           >
             {brands.map((b, i) => (
-              <img
+              <Image
                 key={i}
                 src={`https://placehold.co/110x40/ffffff/000000?text=${encodeURIComponent(b)}`}
                 alt={b}
+                width={110}
+                height={40}
                 className="h-10 w-[110px] rounded shadow-sm border object-contain"
               />
             ))}
@@ -93,28 +96,30 @@ function Footer() {
             destacando diferenciais e missão da empresa.
           </p>
           <ul className="mt-3 text-sm text-gray-700 leading-7">
-            <li><Link href="#">Como comprar</Link></li>
-            <li><Link href="#">Política de trocas</Link></li>
-            <li><Link href="#">Frete e prazos</Link></li>
-            <li><Link href="#">Perguntas frequentes</Link></li>
+            <li><Link href="/">Como comprar</Link></li>
+            <li><Link href="/">Política de trocas</Link></li>
+            <li><Link href="/">Frete e prazos</Link></li>
+            <li><Link href="/">Perguntas frequentes</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-gray-800 font-medium mb-3">A empresa</h4>
           <ul className="text-sm text-gray-700 leading-7">
-            <li><Link href="#">Quem somos</Link></li>
-            <li><Link href="#">Trabalhe conosco</Link></li>
-            <li><Link href="#">Parcerias</Link></li>
-            <li><Link href="#">Políticas</Link></li>
+            <li><Link href="/">Quem somos</Link></li>
+            <li><Link href="/">Trabalhe conosco</Link></li>
+            <li><Link href="/">Parcerias</Link></li>
+            <li><Link href="/">Políticas</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-gray-800 font-medium mb-3">Catálogo Virtual</h4>
-          <img
+          <Image
             src="https://placehold.co/120x160/ffffff/000000?text=Cat%C3%A1logo"
             alt="Catálogo Virtual"
+            width={120}
+            height={160}
             className="rounded border shadow-sm"
           />
         </div>
@@ -124,10 +129,10 @@ function Footer() {
       <div className="max-w-[1400px] w-full mx-auto border-t py-4 px-4 md:px-6">
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">Redes Sociais</span>
-          <Link href="#" className="text-gray-700 hover:text-gray-900"><IconBrandFacebook size={18} /></Link>
-          <Link href="#" className="text-gray-700 hover:text-gray-900"><IconBrandInstagram size={18} /></Link>
-          <Link href="#" className="text-gray-700 hover:text-gray-900"><IconBrandTwitter size={18} /></Link>
-          <Link href="#" className="text-gray-700 hover:text-gray-900"><IconBrandYoutube size={18} /></Link>
+          <Link href="/" className="text-gray-700 hover:text-gray-900"><IconBrandFacebook size={18} /></Link>
+          <Link href="/" className="text-gray-700 hover:text-gray-900"><IconBrandInstagram size={18} /></Link>
+          <Link href="/" className="text-gray-700 hover:text-gray-900"><IconBrandTwitter size={18} /></Link>
+          <Link href="/" className="text-gray-700 hover:text-gray-900"><IconBrandYoutube size={18} /></Link>
         </div>
       </div>
 

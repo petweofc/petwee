@@ -10,6 +10,7 @@ import {
   Title,
   Alert
 } from '@mantine/core';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,8 +19,10 @@ import { signIn } from 'next-auth/react';
 import { Loader } from '@mantine/core';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { FacebookButton, GoogleButton } from '../Buttons/AuthButtons';
+
+// Social auth buttons removed from signup/login UI
 import Link from 'next/link';
+import { GoogleButton, FacebookButton } from '@/lib/components/Buttons/AuthButtons';
 
 interface LoginFormProps {
   title: string;
@@ -28,7 +31,6 @@ interface LoginFormProps {
 }
 
 let baseSchema = {
-  // Mantemos o campo "username" por compatibilidade, mas a UI usa E-mail
   username: z
     .string()
     .min(1, { message: 'E-mail não pode ser vazio' })
@@ -41,11 +43,10 @@ let baseSchema = {
 
 const loginFormSchema = z.object(baseSchema);
 const signupFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, { message: 'Name cannot be empty' })
-    .max(50, { message: 'Name should be less than 50 characters' }),
-  ...baseSchema
+  name: z.string().min(1, { message: 'Nome não pode estar vazio' }).max(100),
+  ...baseSchema,
+  confirmPassword: z.string().optional(),
+  termsConsent: z.boolean().optional()
 });
 
 type SignUpFormData = z.infer<typeof signupFormSchema>;
@@ -57,17 +58,19 @@ const useStyles = createStyles((theme) => ({
   wrapper: {
     minHeight: '100vh',
     backgroundSize: 'cover',
-    backgroundImage:
-      'url(https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1965&q=80)'
+    backgroundImage: 'url(/background.jpg)'
   },
 
   form: {
-    borderRight: `1px solid ${
-      theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.colors.gray[3]
-    }`,
-    minHeight: '100vh',
-    maxWidth: 450,
-    paddingTop: 80,
+    // center the form
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
+    maxWidth: 480,
+    width: '100%',
+    margin: '40px auto',
+    paddingTop: 40,
 
     [`@media (max-width: ${theme.breakpoints.sm}px)`]: {
       maxWidth: '100%'
@@ -98,7 +101,6 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm<SignUpFormData>({
     resolver: zodResolver(isForSignUp ? signupFormSchema : loginFormSchema)
@@ -155,18 +157,33 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
       }
     } else {
       setisLoading(true);
+ 
+      
+ 
       const res = await signIn('credentials', {
         name: (data as any).name,
         username: data.username,
         password: data.password,
         type: 'signup',
         redirect: false
-      });
 
+      });
       if (res && res.ok) {
-        setMessage('Account Created, Redirecting...');
+        setMessage('Conta criada com sucesso! Redirecionando...');
         setisLoading(false);
-        router.push('/');
+        // Após criar a conta, fazer login automaticamente
+        const loginRes = await signIn('credentials', {
+          username: (data as any).username,
+          password: (data as any).password,
+          type: 'login',
+          redirect: false
+        });
+        
+        if (loginRes && loginRes.ok) {
+          router.push('/');
+        } else {
+          router.push('/login');
+        }
       } else {
         setError('Erro ao criar conta. Verifique os dados.');
         setisLoading(false);
@@ -174,22 +191,24 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
     }
   };
 
-  let nameInput;
+  let signupInputs;
   let loginExistense;
 
   if (isForSignUp) {
-    nameInput = (
+    signupInputs = (
       <>
         <TextInput {...register('name')} label="Nome" placeholder="Seu nome" size="md" />
-        {errors.name?.message && <span className="text-red-700">ⓘ {errors.name?.message}</span>}
+        {errors && (errors as any).name?.message && (
+          <span className="text-red-700">ⓘ {(errors as any).name?.message as string}</span>
+        )}
       </>
     );
     loginExistense = (
-      <UserAuthCheck message="Já possui conta?" action="Entrar" link="/login" />
+      <UserAuthCheck message="Já tem uma conta?" action="Entrar" link="/login" />
     );
   } else {
     loginExistense = (
-      <UserAuthCheck message={"Cliente novo?"} action="Cadastrar" link="/signup" />
+      <UserAuthCheck message={"Não tem uma conta?"} action="Cadastrar" link="/signup" />
     );
   }
 
@@ -198,10 +217,13 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
       <Paper className={classes.form} radius={0} p={30}>
         <Title order={2} className={classes.title} align="center" mt="md" mb={50}>
           <Link href="/">
-            <span className="font-logo text-6xl">Zavy</span>
+            <Image src="/logo.jpeg" alt="Logo" width={160} height={48} />
           </Link>
         </Title>
 
+ 
+        {/* Social login removed; proceeding with email/username form only */}
+ 
         <Group grow mb="md" mt="md">
           <GoogleButton onClick={() => signIn('google')} radius="xl">
             Google
@@ -212,9 +234,10 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
         </Group>
 
         <Divider label="Ou entre com e-mail" labelPosition="center" my="lg" />
+ 
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          {nameInput}
+          {signupInputs}
           <TextInput
             {...register('username')}
             label="E-mail"
@@ -235,9 +258,27 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           {errors.password?.message && (
             <span className="text-red-700">ⓘ {errors.password?.message}</span>
           )}
+ 
+          {isForSignUp && (
+            <>
+              <PasswordInput
+                {...register('confirmPassword')}
+                label="Confirmar senha"
+                placeholder="Confirme sua senha"
+                mt="md"
+                size="md"
+              />
+              {errors && (errors as any).confirmPassword?.message && (
+                <span className="text-red-700">ⓘ {(errors as any).confirmPassword?.message as string}</span>
+              )}
+              <Checkbox {...register('termsConsent')} label="Concordo com os termos e condições" mt="md" size="md" />
+            </>
+          )}
+ 
           <div className="mt-2 mb-2 text-right">
-            <Link href="#" className="text-blue-700 text-sm">Esqueci minha senha</Link>
+            <Link href="/" className="text-blue-700 text-sm">Esqueci minha senha</Link>
           </div>
+ 
           <Checkbox label="Manter-me conectado" mt="xl" size="md" />
           <Button type="submit" className="bg-black hover:bg-slate-800" fullWidth mt="xl" size="md">
             {isLoading ? <Loader color="white" variant="dots" /> : buttonTitle}

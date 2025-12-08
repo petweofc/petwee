@@ -57,6 +57,9 @@ export const authOptions: NextAuthOptions = {
         
         if (type === 'login') {
           const loginEndpoint = process.env.NEXTAUTH_LOGIN;
+          if (!loginEndpoint) {
+            return null;
+          }
           console.log('[NextAuth][authorize][login] endpoint:', loginEndpoint, 'username:', username);
           try {
             const res = await fetch(loginEndpoint, {
@@ -87,6 +90,9 @@ export const authOptions: NextAuthOptions = {
 
         if (type === 'signup') {
           const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
+          if (!signupEndpoint) {
+            return null;
+          }
           console.log('[NextAuth][authorize][signup] endpoint:', signupEndpoint, 'username:', username);
           try {
           const res = await fetch(signupEndpoint, {
@@ -154,7 +160,7 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
-    signOut: '/signup'
+    signOut: '/login'
   }
 };
 

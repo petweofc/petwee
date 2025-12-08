@@ -10,6 +10,7 @@ export default class _Document extends Document {
     return (
       <Html>
         <Head>
+          <meta name="emotion-insertion-point" content="" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
           <link

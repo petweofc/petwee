@@ -8,6 +8,8 @@ import type { AppProps } from 'next/app';
 import { ReactNode, useState } from 'react';
 import { NextPage } from 'next';
 import { trpc } from '../utils/trpc';
+import { CacheProvider } from '@emotion/react';
+import createCache from '@emotion/cache';
 
 type Page<P = {}> = NextPage<P> & {
   getLayout?: (page: ReactNode) => ReactNode;
@@ -17,6 +19,16 @@ type Props = AppProps<{
   session: Session;
 }> & { Component: Page };
 
+const getEmotionCache = () => {
+  if (typeof document !== 'undefined') {
+    const insertionPoint = document.querySelector('meta[name="emotion-insertion-point"]') as HTMLElement | null;
+    return createCache({ key: 'mantine', prepend: true, insertionPoint: insertionPoint ?? undefined });
+  }
+  return createCache({ key: 'mantine', prepend: true });
+};
+
+const emotionCache = getEmotionCache();
+
 function App({ Component, pageProps: { session, ...pageProps } }: Props) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
 
@@ -25,13 +37,14 @@ function App({ Component, pageProps: { session, ...pageProps } }: Props) {
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
   return (
-    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
-      <MantineProvider
-        withGlobalStyles
-        theme={{
-          fontFamily: 'Inter',
-          headings: { fontFamily: 'Inter' },
-          colorScheme: colorScheme,
+    <CacheProvider value={emotionCache}>
+      <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
+        <MantineProvider
+          withGlobalStyles
+          theme={{
+            fontFamily: 'Inter',
+            headings: { fontFamily: 'Inter' },
+            colorScheme: colorScheme,
           colors: {
             brown: [
               '#feefe9',
@@ -63,15 +76,16 @@ function App({ Component, pageProps: { session, ...pageProps } }: Props) {
             }
           })
         }}
-      >
-        <ModalsProvider>
-          <RouterTransition />
-          <SessionProvider session={session}>
-            {getLayout(<Component {...pageProps} />)}
-          </SessionProvider>
-        </ModalsProvider>
-      </MantineProvider>
-    </ColorSchemeProvider>
+        >
+          <ModalsProvider>
+            <RouterTransition />
+            <SessionProvider session={session}>
+              {getLayout(<Component {...pageProps} />)}
+            </SessionProvider>
+          </ModalsProvider>
+        </MantineProvider>
+      </ColorSchemeProvider>
+    </CacheProvider>
   );
 }
 
