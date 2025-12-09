@@ -4,6 +4,7 @@ import FacebookProvider from 'next-auth/providers/facebook';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/utils/db/prisma';
+import argon2 from 'argon2';
 
 type UserResponse = {
   name: string;
@@ -56,43 +57,30 @@ export const authOptions: NextAuthOptions = {
         } = credentials as any;
         
         if (type === 'login') {
-          const loginEndpoint = process.env.NEXTAUTH_LOGIN;
-          if (!loginEndpoint) {
-            return null;
-          }
-          console.log('[NextAuth][authorize][login] endpoint:', loginEndpoint, 'username:', username);
           try {
-            const res = await fetch(loginEndpoint, {
-              method: 'POST',
-              body: JSON.stringify({
-                username,
-                password
-              }),
-              headers: { 'Content-Type': 'application/json' }
+            const user = await prisma.user.findFirst({
+              where: {
+                OR: [{ email: username }, { username: username }]
+              }
             });
-
-            console.log('[NextAuth][authorize][login] response status:', res.status);
-            let user: UserResponse | null = null;
-            try {
-              user = (await res.json()) as UserResponse;
-            } catch (e) {
-              console.error('[NextAuth][authorize][login] JSON parse failed:', e);
-            }
-            console.log('[NextAuth][authorize][login] response body:', user);
-
-            if (res.ok && user) {
-              return user;
+            if (user && user.password) {
+              const ok = await argon2.verify(user.password, password);
+              if (ok && user.name && (user.username || user.email)) {
+                return {
+                  name: user.name,
+                  username: user.username ?? user.email ?? '',
+                  id: user.id
+                } as UserResponse;
+              }
             }
           } catch (error) {
-            console.error('[NextAuth][authorize][login] fetch error:', error);
+            console.error('[NextAuth][authorize][login] db error:', error);
           }
         }
 
         if (type === 'signup') {
-          const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
-          if (!signupEndpoint) {
-            return null;
-          }
+          const base = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+          const signupEndpoint = process.env.NEXTAUTH_SIGNUP || `${base}/api/signup`;
           console.log('[NextAuth][authorize][signup] endpoint:', signupEndpoint, 'username:', username);
           try {
           const res = await fetch(signupEndpoint, {

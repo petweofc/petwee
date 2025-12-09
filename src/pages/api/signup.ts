@@ -254,7 +254,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   if (!parse.success) {
     console.warn('[api/signup] zod parse fail:', parse.error?.errors?.map((e) => e.message));
-    return res.status(400).json({ message: 'Something wrong with your input' });
+    const firstMsg = parse.error?.errors?.[0]?.message || 'Entrada inválida';
+    return res.status(400).json({ message: firstMsg });
   }
 
   const name = parse.data.name;
@@ -294,7 +295,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     if (user) {
       console.warn('[api/signup] username already exists:', username);
-      return res.status(409).json({ message: 'This username already exists' });
+      return res.status(409).json({ message: 'E-mail já cadastrado' });
+    }
+
+    if (cpf) {
+      const existingCPF = await prisma.user.findFirst({ where: { cpf } });
+      if (existingCPF) {
+        console.warn('[api/signup] cpf already exists:', cpf);
+        return res.status(409).json({ message: 'CPF já cadastrado' });
+      }
+    }
+
+    if (cnpj) {
+      const existingCNPJ = await prisma.user.findFirst({ where: { cnpj } });
+      if (existingCNPJ) {
+        console.warn('[api/signup] cnpj already exists:', cnpj);
+        return res.status(409).json({ message: 'CNPJ já cadastrado' });
+      }
     }
 
     const hash = await argon2.hash(password);
@@ -369,9 +386,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
 
     console.error('[api/signup] unexpected: user created but name/username missing');
-    return res.status(500).json({ message: 'Something went wrong' });
+    return res.status(500).json({ message: 'Algo deu errado' });
   } catch (error) {
     console.error('[api/signup] unexpected error:', error);
-    return res.status(500).json({ message: 'An Error Occured' });
+    const code = (error as any)?.code;
+    const target = (error as any)?.meta?.target as string[] | string | undefined;
+    if (code === 'P2002') {
+      const t = Array.isArray(target) ? target : [target].filter(Boolean);
+      if (t?.includes('email') || t?.includes('username')) {
+        return res.status(409).json({ message: 'E-mail já cadastrado' });
+      }
+      if (t?.includes('cpf')) {
+        return res.status(409).json({ message: 'CPF já cadastrado' });
+      }
+      if (t?.includes('cnpj')) {
+        return res.status(409).json({ message: 'CNPJ já cadastrado' });
+      }
+      return res.status(409).json({ message: 'Registro duplicado' });
+    }
+    return res.status(500).json({ message: 'Erro no servidor' });
   }
 }

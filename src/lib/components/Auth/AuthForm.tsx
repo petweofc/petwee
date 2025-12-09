@@ -157,35 +157,38 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
       }
     } else {
       setisLoading(true);
- 
-      
- 
-      const res = await signIn('credentials', {
-        name: (data as any).name,
-        username: data.username,
-        password: data.password,
-        type: 'signup',
-        redirect: false
-
-      });
-      if (res && res.ok) {
-        setMessage('Conta criada com sucesso! Redirecionando...');
-        setisLoading(false);
-        // Após criar a conta, fazer login automaticamente
-        const loginRes = await signIn('credentials', {
-          username: (data as any).username,
-          password: (data as any).password,
-          type: 'login',
-          redirect: false
+      try {
+        const check = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: (data as any).name,
+            username: data.username,
+            password: data.password
+          })
         });
-        
-        if (loginRes && loginRes.ok) {
-          router.push('/');
+        const payload = await check.json().catch(() => ({}));
+
+        if (check.status === 200) {
+          setMessage('Conta criada com sucesso! Redirecionando...');
+          setisLoading(false);
+          const loginRes = await signIn('credentials', {
+            username: (data as any).username,
+            password: (data as any).password,
+            type: 'login',
+            redirect: false
+          });
+          if (loginRes && loginRes.ok) {
+            router.push('/');
+          } else {
+            router.push('/login');
+          }
         } else {
-          router.push('/login');
+          setError((payload as any)?.message || 'Erro ao criar conta. Verifique os dados.');
+          setisLoading(false);
         }
-      } else {
-        setError('Erro ao criar conta. Verifique os dados.');
+      } catch (e) {
+        setError('Falha de conexão com o servidor.');
         setisLoading(false);
       }
     }
