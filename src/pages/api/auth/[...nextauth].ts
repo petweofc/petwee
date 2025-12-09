@@ -4,6 +4,7 @@ import FacebookProvider from 'next-auth/providers/facebook';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/utils/db/prisma';
+import argon2 from 'argon2';
 
 type UserResponse = {
   name: string;
@@ -37,37 +38,6 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'Credentials',
       credentials: {},
-<<<<<<< HEAD
-      async authorize(credentials, req) {
-        const {
-          accountType,
-          fullName,
-          email,
-          mobilePhone,
-          phone,
-          gender,
-          birthDate,
-          cpf,
-          username,
-          password,
-          type,
-          termsConsent
-        } = credentials as unknown as {
-          accountType?: 'INDIVIDUAL' | 'COMPANY';
-          fullName?: string;
-          email?: string;
-          mobilePhone?: string;
-          phone?: string;
-          gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'UNDISCLOSED';
-          birthDate?: string;
-          cpf?: string;
-          username: string;
-          password: string;
-          type?: string;
-          termsConsent?: boolean;
-        };
-
-=======
       async authorize(credentials: any, req) {
         const {
           name,
@@ -86,58 +56,39 @@ export const authOptions: NextAuthOptions = {
           stateRegistration
         } = credentials as any;
         
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
         if (type === 'login') {
-          const loginEndpoint = process.env.NEXTAUTH_LOGIN;
-          console.log('[NextAuth][authorize][login] endpoint:', loginEndpoint, 'username:', username);
           try {
-            const res = await fetch(loginEndpoint, {
-              method: 'POST',
-              body: JSON.stringify({
-                username,
-                password
-              }),
-              headers: { 'Content-Type': 'application/json' }
+            const user = await prisma.user.findFirst({
+              where: {
+                OR: [{ email: username }, { username: username }]
+              }
             });
-
-            console.log('[NextAuth][authorize][login] response status:', res.status);
-            let user: UserResponse | null = null;
-            try {
-              user = (await res.json()) as UserResponse;
-            } catch (e) {
-              console.error('[NextAuth][authorize][login] JSON parse failed:', e);
-            }
-            console.log('[NextAuth][authorize][login] response body:', user);
-
-            if (res.ok && user) {
-              return user;
+            if (user && user.password) {
+              const ok = await argon2.verify(user.password, password);
+              if (ok && user.name && (user.username || user.email)) {
+                return {
+                  name: user.name,
+                  username: user.username ?? user.email ?? '',
+                  id: user.id
+                } as UserResponse;
+              }
             }
           } catch (error) {
-            console.error('[NextAuth][authorize][login] fetch error:', error);
+            console.error('[NextAuth][authorize][login] db error:', error);
           }
         }
 
         if (type === 'signup') {
-          console.log('NextAuth signup credentials:', credentials);
-          const signupEndpoint = process.env.NEXTAUTH_SIGNUP;
+          const base = process.env.NEXTAUTH_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+          const signupEndpoint = process.env.NEXTAUTH_SIGNUP || `${base}/api/signup`;
           console.log('[NextAuth][authorize][signup] endpoint:', signupEndpoint, 'username:', username);
           try {
           const res = await fetch(signupEndpoint, {
             method: 'POST',
             body: JSON.stringify({
-              accountType,
-              fullName,
-              email,
-              mobilePhone,
-              phone,
-              gender,
-              birthDate,
-              cpf,
+              name,
               username,
               password,
-<<<<<<< HEAD
-              termsConsent
-=======
               personType,
               cpf,
               cnpj,
@@ -163,16 +114,10 @@ export const authOptions: NextAuthOptions = {
               postalCode: (credentials as any)?.postalCode,
               region: (credentials as any)?.region,
               country: (credentials as any)?.country || 'Brasil'
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
             }),
             headers: { 'Content-Type': 'application/json' }
           });
 
-<<<<<<< HEAD
-          console.log('Signup API response status:', res.status);
-          const user: UserResponse = await res.json();
-          console.log('Signup API response:', user);
-=======
             console.log('[NextAuth][authorize][signup] response status:', res.status);
             let user: UserResponse | null = null;
             try {
@@ -181,7 +126,6 @@ export const authOptions: NextAuthOptions = {
               console.error('[NextAuth][authorize][signup] JSON parse failed:', e);
             }
             console.log('[NextAuth][authorize][signup] response body:', user);
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 
             if (res.ok && user) {
               return user;
@@ -204,7 +148,7 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
-    signOut: '/signup'
+    signOut: '/login'
   }
 };
 

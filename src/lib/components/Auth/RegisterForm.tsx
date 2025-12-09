@@ -250,38 +250,56 @@ export default function RegisterForm() {
       if (!m) return d;
       return `${m[3]}-${m[2]}-${m[1]}`;
     };
-    const res = await signIn('credentials', {
-      name: data.name,
-      username: data.email,
-      password: data.password,
-      personType: 'PF',
-      cpf: data.cpf,
-      birthDate: parseDate(data.birthDate),
-      gender: data.gender,
-      phone: data.phone,
-      whatsapp: data.whatsapp,
-      alternatePhone: data.alternatePhone,
-      pfDefinition: data.pfDefinition,
-      // endereço
-      addressLabel: data.addressLabel,
-      addressLine1: data.addressLine1,
-      addressLine2: data.addressLine2,
-      StreetNumber: data.StreetNumber,
-      district: data.district,
-      city: data.city,
-      postalCode: data.postalCode,
-      region: data.region,
-      country: 'Brasil',
-      type: 'signup',
-      redirect: false
-    });
+    try {
+      const check = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          username: data.email,
+          password: data.password,
+          personType: 'PF',
+          cpf: data.cpf,
+          birthDate: parseDate(data.birthDate),
+          gender: data.gender,
+          phone: data.phone,
+          whatsapp: data.whatsapp,
+          alternatePhone: data.alternatePhone,
+          pfDefinition: data.pfDefinition,
+          // endereço
+          addressLabel: data.addressLabel,
+          addressLine1: data.addressLine1,
+          addressLine2: data.addressLine2,
+          StreetNumber: data.StreetNumber,
+          district: data.district,
+          city: data.city,
+          postalCode: data.postalCode,
+          region: data.region,
+          country: 'Brasil'
+        })
+      });
+      const payload = await check.json().catch(() => ({}));
 
-    if (res && res.ok) {
-      setMessage('Conta criada! Redirecionando...');
-      setIsLoading(false);
-      router.push('/');
-    } else {
-      setError('Erro ao criar conta. Verifique os dados.');
+      if (check.status === 200) {
+        setMessage('Conta criada! Redirecionando...');
+        setIsLoading(false);
+        const loginRes = await signIn('credentials', {
+          username: data.email,
+          password: data.password,
+          type: 'login',
+          redirect: false
+        });
+        if (loginRes && loginRes.ok) {
+          router.push('/');
+        } else {
+          router.push('/login');
+        }
+      } else {
+        setError((payload as any)?.message || 'Erro ao criar conta. Verifique os dados.');
+        setIsLoading(false);
+      }
+    } catch (e) {
+      setError('Falha de conexão com o servidor.');
       setIsLoading(false);
     }
   };
@@ -290,41 +308,60 @@ export default function RegisterForm() {
     setError('');
     setMessage('');
     setIsLoading(true);
-    const res = await signIn('credentials', {
-      name: data.contactName,
-      username: data.email,
-      password: data.password,
-      personType: 'PJ',
-      cnpj: data.cnpj,
-      companyName: data.companyName,
-      tradeName: data.tradeName,
-      birthDate: data.birthDate,
-      gender: data.gender,
-      stateRegistration: data.stateRegistration,
-      stateRegistrationIsento: data.stateRegistrationIsento,
-      phone: data.phone,
-      whatsapp: data.whatsapp,
-      alternatePhone: data.alternatePhone,
-      pjDefinition: data.pjDefinition,
-      // endereço
-      addressLabel: data.addressLabel,
-      addressLine1: data.addressLine1,
-      addressLine2: data.addressLine2,
-      StreetNumber: data.StreetNumber,
-      city: data.city,
-      postalCode: data.postalCode,
-      region: data.region,
-      country: 'Brasil',
-      type: 'signup',
-      redirect: false
-    });
+    try {
+      const check = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.contactName,
+          username: data.email,
+          password: data.password,
+          personType: 'PJ',
+          cnpj: data.cnpj,
+          companyName: data.companyName,
+          tradeName: data.tradeName,
+          birthDate: data.birthDate,
+          gender: data.gender,
+          stateRegistration: data.stateRegistration,
+          stateRegistrationIsento: data.stateRegistrationIsento,
+          phone: data.phone,
+          whatsapp: data.whatsapp,
+          alternatePhone: data.alternatePhone,
+          pjDefinition: data.pjDefinition,
+          // endereço
+          addressLabel: data.addressLabel,
+          addressLine1: data.addressLine1,
+          addressLine2: data.addressLine2,
+          StreetNumber: data.StreetNumber,
+          district: data.district,
+          city: data.city,
+          postalCode: data.postalCode,
+          region: data.region,
+          country: 'Brasil'
+        })
+      });
+      const payload = await check.json().catch(() => ({}));
 
-    if (res && res.ok) {
-      setMessage('Conta criada! Redirecionando...');
-      setIsLoading(false);
-      router.push('/');
-    } else {
-      setError('Erro ao criar conta. Verifique os dados.');
+      if (check.status === 200) {
+        setMessage('Conta criada! Redirecionando...');
+        setIsLoading(false);
+        const loginRes = await signIn('credentials', {
+          username: data.email,
+          password: data.password,
+          type: 'login',
+          redirect: false
+        });
+        if (loginRes && loginRes.ok) {
+          router.push('/');
+        } else {
+          router.push('/login');
+        }
+      } else {
+        setError((payload as any)?.message || 'Erro ao criar conta. Verifique os dados.');
+        setIsLoading(false);
+      }
+    } catch (e) {
+      setError('Falha de conexão com o servidor.');
       setIsLoading(false);
     }
   };

@@ -1,57 +1,9 @@
 import { NextApiResponse, NextApiRequest } from 'next';
 import { prisma } from '@/utils/db/prisma';
 import { randomUUID } from 'crypto';
-import bcrypt from 'bcryptjs';
+import argon2 from 'argon2';
 import * as z from 'zod';
 
-<<<<<<< HEAD
-// Função para converter data brasileira (DD/MM/AAAA) para Date
-const parseBrazilianDate = (dateString: string): Date | undefined => {
-  if (!dateString) return undefined;
-  
-  // Converte DD/MM/AAAA para AAAA-MM-DD
-  const parts = dateString.split('/');
-  if (parts.length === 3) {
-    const [day, month, year] = parts;
-    return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-  }
-  
-  return undefined;
-};
-
-const credentials = z.object({
-  accountType: z.enum(['INDIVIDUAL', 'COMPANY']).default('INDIVIDUAL'),
-  fullName: z
-    .string()
-    .min(1, { message: 'Full name cannot be empty' })
-    .max(100, { message: 'Full name should be less than 100 characters' }),
-  email: z
-    .string()
-    .email({ message: 'Invalid email address' })
-    .max(100, { message: 'Email should be less than 100 characters' }),
-  mobilePhone: z
-    .string()
-    .min(8, { message: 'Mobile phone should be at least 8 characters' })
-    .max(20, { message: 'Mobile phone should be less than 20 characters' }),
-  // phone removed from signup
-  gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'UNDISCLOSED']).optional(),
-  birthDate: z.string().optional(),
-  cpf: z.string().min(11, { message: 'CPF deve ter pelo menos 11 caracteres' }).max(14, { message: 'CPF deve ter no máximo 14 caracteres' }),
-  username: z
-    .string()
-    .min(1, { message: 'Username cannot be empty' })
-    .max(50, { message: 'Username should be under 50 characters' }),
-  password: z
-    .string()
-    .min(8, { message: 'Password should be at least 8 characters' })
-    .max(64, { message: 'Password should be under 64 characters' }),
-  confirmPassword: z.string().min(8).max(64),
-  termsConsent: z.boolean().refine((v) => v === true, { message: 'You must accept the terms' })
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword']
-});
-=======
 // Validação de CPF (remoção de não dígitos e cálculo dos dígitos verificadores)
 const isValidCPF = (value: string) => {
   const cpf = (value || '').replace(/\D/g, '');
@@ -271,7 +223,6 @@ const credentials = z
       }
     }
   });
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 
 type Credentials = z.infer<typeof credentials>;
 
@@ -293,7 +244,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return res.status(200).json({ message: 'method not allowed' });
   }
 
-  console.log('Signup request body:', req.body);
   const userCredentials: Credentials = req.body;
   console.log('[api/signup] body (sanitized):', {
     username: (userCredentials as any)?.username,
@@ -303,25 +253,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const parse = credentials.safeParse(userCredentials);
 
   if (!parse.success) {
-<<<<<<< HEAD
-    console.log('Validation error:', parse.error);
-    return res.status(400).json({ message: 'Something wrong with your input' });
-  }
-
-  const {
-    accountType,
-    fullName,
-    email,
-    mobilePhone,
-    gender,
-    birthDate,
-    cpf,
-    username,
-    password
-  } = parse.data;
-=======
     console.warn('[api/signup] zod parse fail:', parse.error?.errors?.map((e) => e.message));
-    return res.status(400).json({ message: 'Something wrong with your input' });
+    const firstMsg = parse.error?.errors?.[0]?.message || 'Entrada inválida';
+    return res.status(400).json({ message: firstMsg });
   }
 
   const name = parse.data.name;
@@ -351,43 +285,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   const postalCode = parse.data.postalCode;
   const region = parse.data.region;
   const country = parse.data.country;
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 
   try {
     const user = await prisma.user.findFirst({
       where: {
-<<<<<<< HEAD
-        OR: [{ username: username }, { email: email }, { cpf: cpf }]
-=======
         OR: [{ username }, { email: username }]
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
       }
     });
 
     if (user) {
-<<<<<<< HEAD
-      return res.status(409).json({ message: 'User with same username/email/cpf already exists' });
+      console.warn('[api/signup] username already exists:', username);
+      return res.status(409).json({ message: 'E-mail já cadastrado' });
     }
 
-    const hash = await bcrypt.hash(password, 12);
-
-    const newUser = await prisma.user.create({
-      data: {
-        name: fullName,
-        fullName: fullName,
-        email: email,
-        mobilePhone: mobilePhone,
-        gender: gender,
-        birthDate: parseBrazilianDate(birthDate),
-        cpf: cpf,
-        termsConsent: true,
-        accountType: accountType,
-        username: username,
-        password: hash
+    if (cpf) {
+      const existingCPF = await prisma.user.findFirst({ where: { cpf } });
+      if (existingCPF) {
+        console.warn('[api/signup] cpf already exists:', cpf);
+        return res.status(409).json({ message: 'CPF já cadastrado' });
       }
-=======
-      console.warn('[api/signup] username already exists:', username);
-      return res.status(409).json({ message: 'This username already exists' });
+    }
+
+    if (cnpj) {
+      const existingCNPJ = await prisma.user.findFirst({ where: { cnpj } });
+      if (existingCNPJ) {
+        console.warn('[api/signup] cnpj already exists:', cnpj);
+        return res.status(409).json({ message: 'CNPJ já cadastrado' });
+      }
     }
 
     const hash = await argon2.hash(password);
@@ -440,7 +364,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           }
         }
       } as any)
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
     });
     console.log('[api/signup] user created:', { id: newUser.id, username: newUser.username });
 
@@ -463,13 +386,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     }
 
     console.error('[api/signup] unexpected: user created but name/username missing');
-    return res.status(500).json({ message: 'Something went wrong' });
+    return res.status(500).json({ message: 'Algo deu errado' });
   } catch (error) {
-<<<<<<< HEAD
-    console.error('Signup error:', error);
-=======
     console.error('[api/signup] unexpected error:', error);
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
-    return res.status(500).json({ message: 'An Error Occured' });
+    const code = (error as any)?.code;
+    const target = (error as any)?.meta?.target as string[] | string | undefined;
+    if (code === 'P2002') {
+      const t = Array.isArray(target) ? target : [target].filter(Boolean);
+      if (t?.includes('email') || t?.includes('username')) {
+        return res.status(409).json({ message: 'E-mail já cadastrado' });
+      }
+      if (t?.includes('cpf')) {
+        return res.status(409).json({ message: 'CPF já cadastrado' });
+      }
+      if (t?.includes('cnpj')) {
+        return res.status(409).json({ message: 'CNPJ já cadastrado' });
+      }
+      return res.status(409).json({ message: 'Registro duplicado' });
+    }
+    return res.status(500).json({ message: 'Erro no servidor' });
   }
 }

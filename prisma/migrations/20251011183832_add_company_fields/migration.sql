@@ -5,13 +5,10 @@
 
 */
 -- AlterTable
-ALTER TABLE "User" ADD COLUMN     "cnpj" TEXT,
-ADD COLUMN     "companyName" TEXT,
-ADD COLUMN     "contactName" TEXT,
+ALTER TABLE "User" ADD COLUMN     "contactName" TEXT,
 ADD COLUMN     "ie" TEXT,
 ADD COLUMN     "ieExempt" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "ieState" TEXT,
-ADD COLUMN     "phone" TEXT;
+ADD COLUMN     "ieState" TEXT;
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_cnpj_key" ON "User"("cnpj");
+-- cnpj já criado em migração anterior; índice removido para evitar duplicação

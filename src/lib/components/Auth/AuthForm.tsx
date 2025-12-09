@@ -8,14 +8,10 @@ import {
   Checkbox,
   Button,
   Title,
-<<<<<<< HEAD
-  Select
-=======
   Alert
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 } from '@mantine/core';
 import Image from 'next/image';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { UserAuthCheck } from './UserAuthCheck';
@@ -24,24 +20,9 @@ import { Loader } from '@mantine/core';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 
-// Função para aplicar máscara de CPF
-const formatCPF = (value: string) => {
-  // Remove tudo que não é dígito
-  const numbers = value.replace(/\D/g, '');
-  
-  // Aplica a máscara XXX.XXX.XXX-XX
-  if (numbers.length <= 3) {
-    return numbers;
-  } else if (numbers.length <= 6) {
-    return numbers.replace(/(\d{3})(\d+)/, '$1.$2');
-  } else if (numbers.length <= 9) {
-    return numbers.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
-  } else {
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
-  }
-};
 // Social auth buttons removed from signup/login UI
 import Link from 'next/link';
+import { GoogleButton, FacebookButton } from '@/lib/components/Buttons/AuthButtons';
 
 interface LoginFormProps {
   title: string;
@@ -50,45 +31,23 @@ interface LoginFormProps {
 }
 
 let baseSchema = {
-  // Mantemos o campo "username" por compatibilidade, mas a UI usa E-mail
   username: z
     .string()
-<<<<<<< HEAD
-    .min(1, { message: 'Nome de usuário não pode estar vazio' })
-    .max(50, { message: 'Nome de usuário deve ter menos de 50 caracteres' }),
-  password: z
-    .string()
-    .min(8, { message: 'Senha deve ter pelo menos 8 caracteres' })
-    .max(64, { message: 'Senha deve ter menos de 64 caracteres' })
-=======
     .min(1, { message: 'E-mail não pode ser vazio' })
     .max(100, { message: 'E-mail muito longo' }),
   password: z
     .string()
     .min(8, { message: 'Senha deve ter ao menos 8 caracteres' })
     .max(64, { message: 'Senha muito longa' })
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 };
 
 const loginFormSchema = z.object(baseSchema);
-const signupFormSchema = z
-  .object({
-    accountType: z.enum(['INDIVIDUAL', 'COMPANY']).default('INDIVIDUAL'),
-    fullName: z.string().min(1, { message: 'Nome completo não pode estar vazio' }).max(100),
-    email: z.string().email({ message: 'Endereço de email inválido' }).max(100),
-    mobilePhone: z.string().min(8, { message: 'Celular deve ter pelo menos 8 caracteres' }).max(20),
-    // phone removed from signup form
-    gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'UNDISCLOSED']).optional(),
-    birthDate: z.string().optional(),
-    cpf: z.string().min(11, { message: 'CPF deve ter pelo menos 11 caracteres' }).max(14),
-    ...baseSchema,
-    confirmPassword: z.string().min(8).max(64),
-    termsConsent: z.boolean().refine((v) => v === true, { message: 'Você deve aceitar os termos' })
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'As senhas não coincidem',
-    path: ['confirmPassword']
-  });
+const signupFormSchema = z.object({
+  name: z.string().min(1, { message: 'Nome não pode estar vazio' }).max(100),
+  ...baseSchema,
+  confirmPassword: z.string().optional(),
+  termsConsent: z.boolean().optional()
+});
 
 type SignUpFormData = z.infer<typeof signupFormSchema>;
 type LoginFormData = z.infer<typeof loginFormSchema>;
@@ -142,8 +101,6 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   const {
     register,
     handleSubmit,
-    watch,
-    control,
     formState: { errors }
   } = useForm<SignUpFormData>({
     resolver: zodResolver(isForSignUp ? signupFormSchema : loginFormSchema)
@@ -200,61 +157,38 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
       }
     } else {
       setisLoading(true);
-<<<<<<< HEAD
-      
-      // Chamada direta para API de signup em vez de usar NextAuth
-      const res = await fetch('/api/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          accountType: (data as any).accountType,
-          fullName: (data as any).fullName,
-          email: (data as any).email,
-          mobilePhone: (data as any).mobilePhone,
-          gender: (data as any).gender,
-          birthDate: (data as any).birthDate,
-          cpf: (data as any).cpf,
-          username: (data as any).username,
-          password: (data as any).password,
-          confirmPassword: (data as any).confirmPassword,
-          termsConsent: (data as any).termsConsent,
-        }),
-=======
-      const res = await signIn('credentials', {
-        name: (data as any).name,
-        username: data.username,
-        password: data.password,
-        type: 'signup',
-        redirect: false
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
-      });
-
-      const result = await res.json();
-
-      if (res.ok && result.id) {
-        setMessage('Conta criada com sucesso! Redirecionando...');
-        setisLoading(false);
-        // Após criar a conta, fazer login automaticamente
-        const loginRes = await signIn('credentials', {
-          username: (data as any).username,
-          password: (data as any).password,
-          type: 'login',
-          redirect: false
+      try {
+        const check = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: (data as any).name,
+            username: data.username,
+            password: data.password
+          })
         });
-        
-        if (loginRes && loginRes.ok) {
-          router.push('/');
+        const payload = await check.json().catch(() => ({}));
+
+        if (check.status === 200) {
+          setMessage('Conta criada com sucesso! Redirecionando...');
+          setisLoading(false);
+          const loginRes = await signIn('credentials', {
+            username: (data as any).username,
+            password: (data as any).password,
+            type: 'login',
+            redirect: false
+          });
+          if (loginRes && loginRes.ok) {
+            router.push('/');
+          } else {
+            router.push('/login');
+          }
         } else {
-          router.push('/login');
+          setError((payload as any)?.message || 'Erro ao criar conta. Verifique os dados.');
+          setisLoading(false);
         }
-      } else {
-<<<<<<< HEAD
-        setError(result.message || 'Erro ao criar conta');
-=======
-        setError('Erro ao criar conta. Verifique os dados.');
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
+      } catch (e) {
+        setError('Falha de conexão com o servidor.');
         setisLoading(false);
       }
     }
@@ -266,66 +200,10 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   if (isForSignUp) {
     signupInputs = (
       <>
-<<<<<<< HEAD
-        <Controller
-          name="accountType"
-          control={control}
-          defaultValue="INDIVIDUAL"
-          render={({ field }) => (
-            <Select
-              data={[
-                { value: 'INDIVIDUAL', label: 'Pessoa Física' },
-                { value: 'COMPANY', label: 'Pessoa Jurídica' }
-              ]}
-              {...field}
-              label="Tipo de conta"
-              placeholder="Selecione o tipo"
-              size="md"
-            />
-          )}
-        />
-        <TextInput {...register('fullName')} label="Nome completo" placeholder="Digite seu nome completo" size="md" />
-        {errors?.fullName?.message && <span className="text-red-700">ⓘ {errors.fullName?.message}</span>}
-        <TextInput {...register('email')} label="E-mail" placeholder="Digite seu e-mail" mt="md" size="md" />
-        {errors?.email?.message && <span className="text-red-700">ⓘ {errors.email?.message}</span>}
-        <TextInput {...register('mobilePhone')} label="Celular" placeholder="DDD + Celular" mt="md" size="md" />
-        {errors?.mobilePhone?.message && <span className="text-red-700">ⓘ {errors.mobilePhone?.message}</span>}
-        {/* Phone (optional) removed */}
-        <Controller
-          name="gender"
-          control={control}
-          render={({ field }) => (
-            <Select
-              data={[
-                { value: 'MALE', label: 'Masculino' },
-                { value: 'FEMALE', label: 'Feminino' },
-                { value: 'OTHER', label: 'Outro' },
-                { value: 'UNDISCLOSED', label: 'Prefiro não informar' }
-              ]}
-              {...field}
-              label="Gênero (opcional)"
-              placeholder="Escolha o gênero"
-              mt="md"
-              size="md"
-            />
-          )}
-        />
-        <TextInput {...register('birthDate')} label="Data de nascimento (opcional)" placeholder="DD/MM/AAAA" mt="md" size="md" />
-        <TextInput 
-          {...register('cpf')} 
-          label="CPF" 
-          placeholder="000.000.000-00" 
-          mt="md" 
-          size="md"
-          onChange={(e) => {
-            const formatted = formatCPF(e.target.value);
-            e.target.value = formatted;
-            // Atualiza o valor no react-hook-form
-            const { onChange } = register('cpf');
-            onChange(e);
-          }}
-        />
-        {errors?.cpf?.message && <span className="text-red-700">ⓘ {errors.cpf?.message}</span>}
+        <TextInput {...register('name')} label="Nome" placeholder="Seu nome" size="md" />
+        {errors && (errors as any).name?.message && (
+          <span className="text-red-700">ⓘ {(errors as any).name?.message as string}</span>
+        )}
       </>
     );
     loginExistense = (
@@ -334,18 +212,6 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
   } else {
     loginExistense = (
       <UserAuthCheck message={"Não tem uma conta?"} action="Cadastrar" link="/signup" />
-=======
-        <TextInput {...register('name')} label="Nome" placeholder="Seu nome" size="md" />
-        {errors.name?.message && <span className="text-red-700">ⓘ {errors.name?.message}</span>}
-      </>
-    );
-    loginExistense = (
-      <UserAuthCheck message="Já possui conta?" action="Entrar" link="/login" />
-    );
-  } else {
-    loginExistense = (
-      <UserAuthCheck message={"Cliente novo?"} action="Cadastrar" link="/signup" />
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
     );
   }
 
@@ -358,9 +224,9 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           </Link>
         </Title>
 
-<<<<<<< HEAD
+ 
         {/* Social login removed; proceeding with email/username form only */}
-=======
+ 
         <Group grow mb="md" mt="md">
           <GoogleButton onClick={() => signIn('google')} radius="xl">
             Google
@@ -371,19 +237,14 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
         </Group>
 
         <Divider label="Ou entre com e-mail" labelPosition="center" my="lg" />
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
+ 
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {signupInputs}
           <TextInput
             {...register('username')}
-<<<<<<< HEAD
-            label="Nome de usuário"
-            placeholder="Nome de usuário"
-=======
             label="E-mail"
             placeholder="seu@email.com"
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
             mt="md"
             size="md"
           />
@@ -400,7 +261,7 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
           {errors.password?.message && (
             <span className="text-red-700">ⓘ {errors.password?.message}</span>
           )}
-<<<<<<< HEAD
+ 
           {isForSignUp && (
             <>
               <PasswordInput
@@ -416,11 +277,11 @@ export function AuthForm({ title, buttonTitle, isForSignUp }: LoginFormProps) {
               <Checkbox {...register('termsConsent')} label="Concordo com os termos e condições" mt="md" size="md" />
             </>
           )}
-=======
+ 
           <div className="mt-2 mb-2 text-right">
-            <Link href="#" className="text-blue-700 text-sm">Esqueci minha senha</Link>
+            <Link href="/" className="text-blue-700 text-sm">Esqueci minha senha</Link>
           </div>
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
+ 
           <Checkbox label="Manter-me conectado" mt="xl" size="md" />
           <Button type="submit" className="bg-black hover:bg-slate-800" fullWidth mt="xl" size="md">
             {isLoading ? <Loader color="white" variant="dots" /> : buttonTitle}

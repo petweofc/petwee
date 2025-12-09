@@ -123,10 +123,10 @@ export function SideNavBar({
 
       <Navbar.Section className={classes.footer}>
         {session && (
-          <a href="#" className={classes.link} onClick={() => signOut()}>
+          <button type="button" className={classes.link} onClick={() => signOut()}>
             <IconLogout className={classes.linkIcon} stroke={1.5} />
             <span>Logout</span>
-          </a>
+          </button>
         )}
 
         {!session && (
