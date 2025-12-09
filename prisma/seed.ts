@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 async function main() {
+  // Gerar hash da senha padrão para o usuário zavy
+  const defaultPassword = 'zavy123';
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
   const categories = await prisma.category.createMany({
     data: [
       { name: 'Health & Beauty' },
@@ -21,8 +25,8 @@ async function main() {
     create: {
       username: 'zavy',
       name: 'Zavy',
-      password:
-        '$argon2id$v=19$m=65536,t=3,p=4$uVDjpuMv7g3wC6CNgDBy+Q$6HD+S6GGRI3Dp1YQlwwEGuMFWmwuPMMEtiC44YlDzHA',
+      email: 'zavy@example.com',
+      password: hashedPassword,
       seller: {
         create: {
           storeEmail: '',

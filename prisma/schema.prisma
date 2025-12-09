@@ -22,16 +22,6 @@ model User {
   setupComplete Boolean   @default(false)
   password      String?
   image         String?
-<<<<<<< HEAD
-  // Extended profile fields for richer signup
-  fullName      String?
-  mobilePhone   String?
-  gender        Gender?
-  birthDate     DateTime?
-  cpf           String?   @unique
-  termsConsent  Boolean   @default(false)
-  accountType   AccountType? // individual or company
-=======
   // --- Dados PF/PJ ---
   personType    PersonType?
   cpf           String?   @unique
@@ -49,7 +39,6 @@ model User {
   // Definições de perfil
   pfDefinition  PFDefinition?
   pjDefinition  PJDefinition?
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
   accounts      Account[]
   sessions      Session[]
   buyer         Buyer?
@@ -224,19 +213,6 @@ enum PaymentStatus {
   FAILED
 }
 
-<<<<<<< HEAD
-// Signup-related enums
-enum Gender {
-  MALE
-  FEMALE
-  OTHER
-  UNDISCLOSED
-}
-
-enum AccountType {
-  INDIVIDUAL
-  COMPANY
-=======
 // Enum para "O que te define melhor" (PF)
 enum PFDefinition {
   PETSHOP
@@ -261,5 +237,4 @@ enum PJDefinition {
   CONSUMIDOR_FINAL
   VENDEDOR_REPRESENTANTE
   DROPSHIPPING
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
 }

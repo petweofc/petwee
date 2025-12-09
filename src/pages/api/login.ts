@@ -57,16 +57,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     console.log('[api/login] user lookup:', user ? 'FOUND' : 'NOT_FOUND');
 
     if (user && user.password) {
-<<<<<<< HEAD
-      if (await bcrypt.compare(password, user.password)) {
-        if (user.name && user.username) {
-=======
-      const verified = await argon2.verify(user.password, password);
+      const verified = await bcrypt.compare(password, user.password);
       console.log('[api/login] password verify:', verified ? 'OK' : 'FAILED');
       if (verified) {
         if (user.name && (user.username || user.email)) {
           console.log('[api/login] login success:', { id: user.id, username: user.username });
->>>>>>> 941f9158818468b69a970d665f74f204bb987ff8
           return res.status(200).json({
             name: user.name,
             username: user.username ?? user.email ?? '',
