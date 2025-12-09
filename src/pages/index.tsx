@@ -11,7 +11,7 @@ const Home: PageWithLayout = () => {
   const { data: session, status } = useSession();
 
   return (
-    <div className="p-6 min-h-screen w-full overflow-x-hidden text-white">
+    <div className="p-6 min-h-screen min-w-full text-white">
       <Head>
         <title>Zavy</title>
         <meta name="description" content="An ecommerce store" />

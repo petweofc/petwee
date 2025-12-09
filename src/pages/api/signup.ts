@@ -1,7 +1,7 @@
 import { NextApiResponse, NextApiRequest } from 'next';
 import { prisma } from '@/utils/db/prisma';
 import { randomUUID } from 'crypto';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 import * as z from 'zod';
 
 // Validação de CPF (remoção de não dígitos e cálculo dos dígitos verificadores)
@@ -314,7 +314,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
     }
 
-    const hash = await argon2.hash(password);
+    const hash = await bcrypt.hash(password, 10);
     console.log('[api/signup] password hashed');
 
     const parsedBirthDate = birthDate && /^(\d{2})\/(\d{2})\/(\d{4})$/.test(birthDate)

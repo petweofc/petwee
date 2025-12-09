@@ -4,7 +4,7 @@ import FacebookProvider from 'next-auth/providers/facebook';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/utils/db/prisma';
-import argon2 from 'argon2';
+import bcrypt from 'bcryptjs';
 
 type UserResponse = {
   name: string;
@@ -64,7 +64,7 @@ export const authOptions: NextAuthOptions = {
               }
             });
             if (user && user.password) {
-              const ok = await argon2.verify(user.password, password);
+              const ok = await bcrypt.compare(password, user.password);
               if (ok && user.name && (user.username || user.email)) {
                 return {
                   name: user.name,

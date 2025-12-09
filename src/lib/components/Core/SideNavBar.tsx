@@ -71,14 +71,12 @@ const useStyles = createStyles((theme, _params, getRef) => {
 });
 
 export const pages = [
-  { link: '/', label: 'New' },
-  { link: '/category/health-and-beauty', label: 'Health & Beauty' },
-  { link: '/category/women-fashion', label: `Women's Fashion` },
-  { link: '/category/men-fashion', label: `Men's Fashion` },
-  { link: '/category/luxury', label: 'Luxury' },
-  { link: '/category/electronics', label: 'Electronics' },
-  { link: '/category/sports', label: 'Sports' },
-  { link: '/category/other', label: 'Other' }
+  { link: '/', label: 'Cahorros' },
+  { link: '/category/health-and-beauty', label: 'Gato' },
+  { link: '/category/women-fashion', label: 'Raçoes' },
+  { link: '/category/men-fashion', label: 'Medicamentos' },
+  { link: '/category/luxury', label: 'Serviços' },
+  { link: '/category/electronics', label: 'Promoções' }
 ];
 
 export function SideNavBar({
